@@ -18,28 +18,28 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo.
 echo [2/4] Checking Backend...
-if not exist "Backend\node_modules" (
+if not exist "backend\node_modules" (
     echo Installing backend dependencies...
-    cd Backend
+    cd backend
     call npm install
     cd ..
 )
 
 echo Starting Backend Server...
-start "SF Backend (Port 3000)" cmd /k "cd /d "%SCRIPT_DIR%Backend" && npm start"
+start "SF Backend (Port 3000)" cmd /k "cd /d "%SCRIPT_DIR%backend" && npm start"
 
 echo.
 echo [3/4] Checking Frontend...
-if not exist "Frontend\node_modules" (
+if not exist "frontend\node_modules" (
     echo Installing frontend dependencies...
-    cd Frontend
+    cd frontend
     call npm install
     cd ..
 )
 
 echo.
 echo [4/4] Starting Frontend Dev Server...
-start "SF Frontend" cmd /k "cd /d "%SCRIPT_DIR%Frontend" && npm run dev"
+start "SF Frontend" cmd /k "cd /d "%SCRIPT_DIR%frontend" && npm run dev"
 
 echo.
 echo ===================================================

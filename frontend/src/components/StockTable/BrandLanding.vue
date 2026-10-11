@@ -1,0 +1,2636 @@
+<template>
+  <div class="brand-landing pb-28 sm:pb-32 text-slate-900 font-sans w-full max-w-full overflow-x-hidden">
+    
+    <!-- ══════════════════════════════════════════════════════════
+         1. TOP BAR: Brand Title ("SBE Rayagada") & Action Buttons
+         ══════════════════════════════════════════════════════════ -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100/80 px-2.5 sm:px-6 pb-2 transition-all w-full max-w-full overflow-hidden" style="padding-top: max(0.625rem, env(safe-area-inset-top, 0.625rem));">
+      <!-- Top Branding & Action Buttons Row -->
+      <div class="flex items-center justify-between gap-2 w-full">
+        <!-- Left: e-SBE Brand Logo -->
+        <div 
+          class="flex items-center select-none cursor-pointer group py-0.5 shrink-0" 
+          @click="selectTab('All')"
+          title="e-SBE • Wholesale Footwear"
+        >
+          <img 
+            :src="`${baseUrl}assets/logo.png`" 
+            alt="SF Logo" 
+            class="h-8 sm:h-10 w-auto max-w-[140px] sm:max-w-[170px] object-contain group-hover:scale-105 transition-transform duration-200" 
+            @error="$event.target.src = `${baseUrl}assets/logos/e-sbe-new-logo.png`"
+          />
+        </div>
+
+        <!-- Right: Action Buttons (Clean View, Sync, Admin, Commit Preview / Cart) -->
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <!-- ADMIN ONLY: Triple Mode Switch (Clean | All | Upload) -->
+          <div v-if="isAdmin || isSuperAdmin" class="flex items-center p-0.5 bg-slate-100 rounded-xl border border-slate-200/90 shadow-xs">
+            <button
+              @click="appStore.setCleanView('clean')"
+              type="button"
+              class="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg transition-all select-none text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider"
+              :class="(cleanView === 'clean' || cleanView === true) 
+                ? 'bg-gradient-to-r from-amber-500 to-[#c59b27] text-white shadow-xs' 
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'"
+              title="Clean Mode (Photos & stock only)"
+            >
+              <i class="fa-solid fa-sparkles text-[8px]" :class="(cleanView === 'clean' || cleanView === true) ? 'text-amber-100' : 'text-amber-500'"></i>
+              <span>Clean</span>
+            </button>
+
+            <button
+              @click="appStore.setCleanView('all')"
+              type="button"
+              class="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg transition-all select-none text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider"
+              :class="(cleanView === 'all' || cleanView === false) 
+                ? 'bg-slate-800 text-white shadow-xs' 
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'"
+              title="All Products"
+            >
+              <i class="fa-solid fa-border-all text-[8px]" :class="(cleanView === 'all' || cleanView === false) ? 'text-slate-200' : 'text-slate-400'"></i>
+              <span>All</span>
+            </button>
+
+            <button
+              @click="appStore.setCleanView('upload')"
+              type="button"
+              class="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg transition-all select-none text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider"
+              :class="cleanView === 'upload' 
+                ? 'bg-sky-600 text-white shadow-xs animate-pulse' 
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'"
+              title="Upload Mode (Missing photos only, most to least recent)"
+            >
+              <i class="fa-solid fa-cloud-arrow-up text-[8px]" :class="cleanView === 'upload' ? 'text-sky-100' : 'text-sky-500'"></i>
+              <span>Upload</span>
+            </button>
+          </div>
+
+          <!-- NORMAL USER: Old Clean View Switch (Binary pill toggle) -->
+          <button
+            v-else
+            @click="toggleNormalCleanView"
+            type="button"
+            class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl transition-all select-none shrink-0 shadow-xs active:scale-95 border"
+            :class="(cleanView === 'clean' || cleanView === true) ? 'bg-amber-50 border-amber-300/80 text-amber-900' : 'bg-slate-50 border-slate-200/80 text-slate-600 hover:bg-slate-100'"
+            title="Toggle Images Only & In Stock"
+          >
+            <span class="text-[8px] sm:text-[9px] font-black uppercase tracking-wider" :class="(cleanView === 'clean' || cleanView === true) ? 'text-amber-800' : 'text-slate-600'">
+              Clean View
+            </span>
+            <!-- Custom Toggle Pill -->
+            <div
+              class="w-6 sm:w-7 h-3.5 sm:h-4 rounded-full p-0.5 transition-colors relative shrink-0"
+              :class="(cleanView === 'clean' || cleanView === true) ? 'bg-[#c59b27]' : 'bg-slate-300'"
+            >
+              <div
+                class="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-white shadow-sm transition-transform"
+                :class="(cleanView === 'clean' || cleanView === true) ? 'translate-x-2.5 sm:translate-x-3' : 'translate-x-0'"
+              ></div>
+            </div>
+          </button>
+
+          <!-- Sync Button (Admin Mode - Tally Data Sync) -->
+          <button
+            v-if="isAdmin || isSuperAdmin"
+            @click="handleSync"
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-white border border-slate-200 hover:border-amber-400 text-slate-700 hover:text-amber-600 flex items-center justify-center transition-all hover:bg-amber-50/50 active:scale-95 shadow-sm shrink-0"
+            title="Sync Stock from Tally"
+          >
+            <i class="fa-solid fa-rotate text-xs sm:text-sm" :class="{ 'animate-spin text-amber-500': isSyncing }"></i>
+          </button>
+
+          <!-- Admin Login / Hub Button -->
+          <button
+            v-if="!isAdmin && !isSuperAdmin"
+            @click="appStore.toggleAdminModal(true)"
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-white border border-slate-200 hover:border-slate-300 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all hover:bg-slate-50 active:scale-95 shadow-sm shrink-0"
+            title="Admin Login"
+          >
+            <i class="fa-solid fa-lock text-xs sm:text-sm"></i>
+          </button>
+          <button
+            v-else
+            @click="$router.push('/home')"
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-amber-50 border border-amber-300/80 text-amber-700 hover:bg-amber-100 flex items-center justify-center transition-all active:scale-95 shadow-sm shrink-0"
+            title="SBE Hub"
+          >
+            <i class="fa-solid fa-shield-halved text-xs sm:text-sm"></i>
+          </button>
+
+          <!-- Commit Preview Button (Replaces Cart button when photos are staged in session by admin) -->
+          <button
+            v-if="pendingUploads && pendingUploads.length > 0 && (isAdmin || isSuperAdmin)"
+            @click="showCommitPreviewModal = true"
+            class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white flex items-center justify-center transition-all active:scale-95 shadow-md shadow-emerald-800/30 ring-2 ring-emerald-400 shrink-0 animate-pulse"
+            title="Commit Preview: Review and Push Staged Photos to GitHub"
+          >
+            <div class="absolute -top-1.5 -right-1.5 bg-amber-400 text-slate-950 text-[9px] font-black h-4 min-w-[16px] px-1 flex items-center justify-center rounded-full ring-2 ring-white shadow-sm font-mono">
+              {{ pendingUploads.length }}
+            </div>
+            <i class="fa-solid fa-code-commit text-xs sm:text-sm text-emerald-100"></i>
+          </button>
+
+          <!-- Shopping Bag Cart Button (Standard view when no pending uploads) -->
+          <button
+            v-else
+            @click="appStore.toggleCart(true)"
+            class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-[#18181b] text-white flex items-center justify-center transition-all hover:bg-black active:scale-95 shadow-md shadow-black/10 shrink-0"
+            title="View Cart"
+          >
+            <div v-if="cartTotalItems > 0" class="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-black h-4 min-w-[16px] px-1 flex items-center justify-center rounded-full ring-2 ring-white animate-pulse">
+              {{ cartTotalItems }}
+            </div>
+            <i class="fa-solid fa-bag-shopping text-xs sm:text-sm text-amber-400"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════
+           2. BRAND TABS: Full-Rounded Pill-Shaped End-to-End Badges
+           ══════════════════════════════════════════════════════════ -->
+      <div class="mt-2.5 w-full overflow-x-auto no-scrollbar border-t border-slate-100/80 pt-2 pb-1">
+        <div class="flex items-center gap-2 sm:gap-2.5 min-w-max pb-1 px-0.5">
+          <template v-for="tab in brandTabs" :key="tab.id">
+            <!-- 1. Superimposed Pill in Pill (Paragon Gents / Ladies) -->
+            <button
+              v-if="tab.superimposed"
+              @click="selectTab(tab.id)"
+              type="button"
+              class="h-9 sm:h-10 rounded-full flex items-center p-0 overflow-hidden border transition-all duration-200 select-none shrink-0 cursor-pointer shadow-xs active:scale-95 group/pill relative"
+              :class="activeTab === tab.id 
+                ? 'bg-gradient-to-r from-amber-50 to-amber-100/90 border-2 border-[#c59b27] ring-2 ring-amber-400/25 scale-[1.02] shadow-sm' 
+                : 'bg-white border-slate-200/90 hover:border-amber-400/80 hover:bg-slate-50/90 hover:shadow-xs'"
+              :title="tab.label"
+            >
+              <!-- Left: Small pill inside large pill, superimposing top, bottom, and left curve -->
+              <div class="h-full px-2.5 sm:px-3 bg-[#e52421] rounded-full flex items-center justify-center shrink-0 border-r border-red-700/25 shadow-xs">
+                <img
+                  :src="tab.image"
+                  :alt="tab.label"
+                  class="h-4 sm:h-5 max-w-[65px] sm:max-w-[75px] object-contain brightness-0 invert"
+                />
+              </div>
+
+              <!-- Right: Extended part of the bigger pill where 'GENTS' / 'LADIES' is written -->
+              <div class="pl-2 sm:pl-2.5 pr-3.5 sm:pr-4 flex items-center gap-1.5">
+                <span
+                  class="text-[11px] sm:text-xs font-black tracking-wider uppercase whitespace-nowrap"
+                  :class="activeTab === tab.id ? 'text-amber-950 font-black' : 'text-slate-800'"
+                >
+                  {{ tab.subLabel }}
+                </span>
+                <span 
+                  v-if="activeTab === tab.id"
+                  class="w-1.5 h-1.5 rounded-full bg-[#c59b27] shadow-[0_0_6px_rgba(197,155,39,0.8)] shrink-0"
+                ></span>
+              </div>
+            </button>
+
+            <!-- 2. End-to-End Filled Pill (Eeken, Paralite, Solea, Max, Comfy, Ptoes, etc.) -->
+            <button
+              v-else-if="tab.fillLogo && tab.image && !failedLogos.has(tab.id)"
+              @click="selectTab(tab.id)"
+              type="button"
+              class="h-9 sm:h-10 rounded-full overflow-hidden p-0 border transition-all duration-200 select-none shrink-0 cursor-pointer shadow-xs active:scale-95 group/pill relative flex items-center justify-center bg-white"
+              :class="activeTab === tab.id 
+                ? 'border-2 border-[#c59b27] ring-2 ring-amber-400/40 scale-[1.03] shadow-md' 
+                : 'border border-slate-200/90 hover:border-amber-400/80 hover:shadow-xs hover:scale-[1.01]'"
+              :title="tab.label"
+            >
+              <img
+                :src="tab.image"
+                :alt="tab.label"
+                class="h-full w-auto max-w-[125px] sm:max-w-[145px] object-cover rounded-full"
+                @error="failedLogos.add(tab.id)"
+              />
+              <span 
+                v-if="activeTab === tab.id"
+                class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#c59b27] ring-2 ring-white shadow-[0_0_6px_rgba(197,155,39,0.9)]"
+              ></span>
+            </button>
+
+            <!-- 3. Standard Utility Tab (All, New, Box Packing, Loose Packing, 40% Off) -->
+            <button
+              v-else
+              @click="selectTab(tab.id)"
+              type="button"
+              class="h-9 sm:h-10 px-3.5 sm:px-4.5 rounded-full flex items-center justify-center gap-2 border transition-all duration-200 select-none shrink-0 cursor-pointer shadow-xs active:scale-95 group/pill relative"
+              :class="activeTab === tab.id 
+                ? 'bg-gradient-to-r from-amber-50 to-amber-100/80 border-2 border-[#c59b27] text-amber-950 font-black shadow-sm ring-2 ring-amber-400/25 scale-[1.02]' 
+                : 'bg-white border-slate-200/90 text-slate-700 hover:border-amber-400/80 hover:bg-slate-50/90 hover:shadow-xs'"
+              :title="tab.label"
+            >
+              <i v-if="tab.icon" :class="[tab.icon, tab.iconColor || 'text-amber-500']" class="text-xs sm:text-sm"></i>
+              <span class="text-xs sm:text-[13px] font-extrabold tracking-tight whitespace-nowrap" :class="activeTab === tab.id ? 'text-amber-950' : 'text-slate-800'">
+                {{ tab.label }}
+              </span>
+              <span 
+                v-if="activeTab === tab.id"
+                class="w-1.5 h-1.5 rounded-full bg-[#c59b27] shadow-[0_0_6px_rgba(197,155,39,0.8)] shrink-0"
+              ></span>
+            </button>
+          </template>
+        </div>
+      </div>
+    </header>
+
+
+    <!-- ══════════════════════════════════════════════════════════
+         1. SEARCH RESULTS VIEW: Shown when user is actively searching
+         ══════════════════════════════════════════════════════════ -->
+    <section v-if="isSearchActive" class="mt-4 px-3 sm:px-6">
+      <div class="flex items-center justify-between mb-4 bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-sm sm:text-base font-black font-['Clash_Display'] text-slate-900 uppercase truncate">
+            Search: "{{ searchQuery }}"
+          </span>
+          <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-black shrink-0">
+            {{ (selectedItem ? 1 : 0) + otherSearchResults.length }} products found
+          </span>
+        </div>
+        <button
+          @click="clearSearch"
+          class="text-xs font-bold text-slate-500 hover:text-slate-900 flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-all shrink-0"
+        >
+          <i class="fa-solid fa-xmark text-[10px]"></i>
+          <span>Clear Search</span>
+        </button>
+      </div>
+
+      <!-- 1. SELECTED ITEM ON TOP (If user clicked a specific item from dropdown) -->
+      <div v-if="selectedItem" class="mb-6">
+        <div class="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-star text-amber-500"></i>
+          <span>Selected Product</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row bg-gradient-to-br from-amber-500/10 via-amber-50/40 to-white rounded-3xl p-4 sm:p-5 border-2 border-amber-400 shadow-md gap-4 sm:gap-6 relative overflow-hidden group/sel">
+          <!-- Image Section -->
+          <div 
+            class="relative w-full sm:w-[170px] aspect-[4/5] sm:aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer shrink-0 border border-amber-200/60 shadow-sm flex items-center justify-center p-2"
+            @click="handleProductClickFromSearch(selectedItem)"
+          >
+            <!-- Admin Actions Overlay -->
+            <div v-if="isAdmin || isSuperAdmin" class="absolute top-2 right-2 z-30 flex items-center gap-1.5" @click.stop>
+              <button
+                @click.stop="triggerCardPhotoUpload(selectedItem)"
+                :disabled="uploading[selectedItem.productName]"
+                class="px-2.5 py-1 bg-white/95 backdrop-blur-md rounded-lg shadow-md border border-slate-200 hover:border-amber-400 text-slate-700 hover:text-amber-600 text-[11px] font-bold flex items-center gap-1 transition-all active:scale-95"
+                :title="getProductCardImage(selectedItem) ? 'Change Photo' : 'Upload Photo'"
+              >
+                <i v-if="uploading[selectedItem.productName]" class="fa-solid fa-spinner fa-spin text-amber-500 text-xs"></i>
+                <i v-else class="fa-solid fa-camera text-xs text-amber-500"></i>
+                <span>{{ getProductCardImage(selectedItem) ? 'Change' : 'Add Photo' }}</span>
+              </button>
+              <button
+                v-if="getProductCardImage(selectedItem)"
+                @click.stop="handleCardDeletePhoto(selectedItem)"
+                :disabled="uploading[selectedItem.productName]"
+                class="w-7 h-7 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-lg shadow-md transition-all active:scale-95"
+                title="Remove Photo"
+              >
+                <i class="fa-solid fa-trash text-xs"></i>
+              </button>
+            </div>
+
+            <div v-if="isProductStaged(selectedItem)" class="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black flex items-center gap-1 shadow-md z-20">
+              <i class="fa-solid fa-check text-[8px]"></i> Staged
+            </div>
+
+            <CachedImage
+              v-if="getProductCardImage(selectedItem)"
+              :src="getOptimizedImageUrl(getProductCardImage(selectedItem))"
+              :fallback-src="selectedItem?.secondaryImageUrl ? getOptimizedImageUrl(selectedItem.secondaryImageUrl) : null"
+              :alt="selectedItem.productName"
+              class="w-full h-full object-cover rounded-xl transition-transform duration-500 group-hover/sel:scale-105"
+            />
+            <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300 p-2 text-center">
+              <i class="fa-solid fa-image text-3xl opacity-20 mb-2"></i>
+              <button
+                v-if="isAdmin || isSuperAdmin"
+                @click.stop="triggerCardPhotoUpload(selectedItem)"
+                :disabled="uploading[selectedItem.productName]"
+                class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold rounded-xl shadow-md text-xs flex items-center gap-1.5 transition-all"
+              >
+                <i v-if="uploading[selectedItem.productName]" class="fa-solid fa-spinner fa-spin text-xs"></i>
+                <i v-else class="fa-solid fa-camera text-xs"></i>
+                <span>Add Photo</span>
+              </button>
+            </div>
+
+            <div class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/80 backdrop-blur-md text-amber-400 text-[10px] font-black tracking-wider uppercase flex items-center gap-1">
+              <i class="fa-solid fa-check text-[9px]"></i> EXACT MATCH
+            </div>
+          </div>
+
+          <!-- Details Section -->
+          <div class="flex-1 flex flex-col justify-between min-w-0">
+            <div>
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <h3 class="text-base sm:text-lg font-black font-['Clash_Display'] text-slate-900 tracking-tight leading-snug">
+                    {{ getCleanProductName(selectedItem.productName) }}
+                  </h3>
+                  <p class="text-xs text-slate-500 mt-0.5 font-medium truncate">{{ selectedItem.productName }}</p>
+                </div>
+                <span 
+                  class="px-3 py-1 rounded-full text-xs font-black shrink-0 shadow-xs"
+                  :class="selectedItem.quantity > 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-700 border border-rose-200'"
+                >
+                  {{ selectedItem.quantity > 0 ? `${selectedItem.quantity} pairs in stock` : 'Out of Stock' }}
+                </span>
+              </div>
+
+              <!-- Color, Size & Price badges -->
+              <div class="flex flex-wrap items-center gap-2 mt-3 text-xs">
+                <span v-if="getProductColor(selectedItem.productName)" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-slate-200 shadow-xs font-bold text-slate-700">
+                  <span class="w-2.5 h-2.5 rounded-full" :style="{ background: getProductColor(selectedItem.productName).gradient || getProductColor(selectedItem.productName).hex }"></span>
+                  <span class="capitalize">{{ getProductColor(selectedItem.productName).text }}</span>
+                </span>
+                <span v-if="getProductSize(selectedItem.productName)" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200 shadow-xs font-extrabold text-slate-800">
+                  Size: {{ getProductSize(selectedItem.productName) }}
+                </span>
+                <div class="px-3 py-1 rounded-xl bg-slate-900 text-amber-400 font-black text-sm shadow-sm">
+                  ₹{{ getPriceInfo(selectedItem.productName).price }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Add to cart & Quick actions -->
+            <div class="mt-4 pt-3 border-t border-amber-200/60 flex items-center justify-between gap-3">
+              <div class="text-xs font-bold text-slate-600">
+                Order Quantity:
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div 
+                  v-if="getCartQty(selectedItem) > 0" 
+                  class="flex items-center gap-2 p-1 bg-white rounded-2xl shadow-sm border border-amber-300"
+                >
+                  <button 
+                    @click.stop="updateCart(selectedItem, -1)" 
+                    class="w-7 h-7 flex items-center justify-center rounded-xl text-slate-700 hover:bg-slate-100 active:scale-90 transition-all font-black"
+                    title="Decrease"
+                  >
+                    <i class="fa-solid fa-minus text-xs"></i>
+                  </button>
+                  <span class="min-w-[24px] text-center text-sm font-black text-slate-900 px-1">
+                    {{ getCartQty(selectedItem) }}
+                  </span>
+                  <button 
+                    @click.stop="updateCart(selectedItem, 1)" 
+                    class="w-7 h-7 flex items-center justify-center rounded-xl bg-[#18181b] text-amber-400 hover:bg-black active:scale-90 transition-all shadow-xs font-black"
+                    title="Increase"
+                  >
+                    <i class="fa-solid fa-plus text-xs"></i>
+                  </button>
+                </div>
+                <button
+                  v-else
+                  @click.stop="addToCart(selectedItem)"
+                  class="px-5 py-2 rounded-2xl bg-[#18181b] text-amber-400 hover:bg-black font-black text-xs shadow-md transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <i class="fa-solid fa-plus text-xs"></i>
+                  <span>Add to Cart</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. ALL OTHER / MATCHING RESULTS GRID -->
+      <div v-if="displayedSearchResults.length > 0">
+        <div v-if="selectedItem" class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+          <i class="fa-solid fa-layer-group text-slate-400"></i>
+          <span>More Results Matching "{{ searchQuery }}" ({{ displayedSearchResults.length }})</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4 pb-6">
+          <template v-for="product in visibleSearchResults" :key="product.isCore ? product.id : product.productName">
+            <ParagonCoreCard
+              v-if="product.isCore"
+              :core="product.core"
+              @open-image-popup="handleProductClickFromSearch($event)"
+            />
+            <div
+              v-else
+              class="flex flex-col bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200/70 overflow-hidden relative group/card"
+            >
+            <!-- Image Area -->
+            <div 
+              class="relative w-full aspect-[4/5] bg-slate-50 cursor-pointer overflow-hidden"
+              @click="handleProductClickFromSearch(product)"
+            >
+              <!-- Out of Stock Overlay -->
+              <div v-if="product.quantity <= 0" class="absolute inset-0 z-10 bg-slate-50/80 backdrop-blur-[2px] flex items-center justify-center">
+                <span class="px-2.5 py-0.5 bg-slate-200 text-slate-500 text-[10px] font-bold rounded-full border border-slate-300">Out of Stock</span>
+              </div>
+
+              <!-- Admin Controls Overlay -->
+              <div v-if="isAdmin || isSuperAdmin" class="absolute top-1.5 right-1.5 z-30 flex items-center gap-1" @click.stop>
+                <button
+                  @click.stop="triggerCardPhotoUpload(product)"
+                  :disabled="uploading[product.productName]"
+                  class="h-6 px-1.5 bg-white/95 backdrop-blur-md rounded-md shadow border border-slate-200 hover:border-amber-400 text-slate-700 hover:text-amber-600 text-[10px] font-bold flex items-center gap-1 transition-all active:scale-95"
+                  :title="getProductCardImage(product) ? 'Change Photo' : 'Upload Photo'"
+                >
+                  <i v-if="uploading[product.productName]" class="fa-solid fa-spinner fa-spin text-amber-500 text-[9px]"></i>
+                  <i v-else class="fa-solid fa-camera text-[9px] text-amber-500"></i>
+                  <span class="hidden sm:inline">{{ getProductCardImage(product) ? 'Edit' : 'Add' }}</span>
+                </button>
+                <button
+                  v-if="getProductCardImage(product)"
+                  @click.stop="handleCardDeletePhoto(product)"
+                  :disabled="uploading[product.productName]"
+                  class="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-md shadow transition-all active:scale-95"
+                  title="Remove Photo"
+                >
+                  <i class="fa-solid fa-trash text-[9px]"></i>
+                </button>
+              </div>
+
+              <div v-if="isProductStaged(product)" class="absolute bottom-1.5 right-1.5 z-20 px-1.5 py-0.5 rounded-full bg-emerald-600/90 backdrop-blur-sm text-white text-[9px] font-black flex items-center gap-1 shadow">
+                <i class="fa-solid fa-check text-[8px]"></i> Staged
+              </div>
+
+              <CachedImage
+                v-if="getProductCardImage(product)"
+                :src="getOptimizedImageUrl(getProductCardImage(product))"
+                :fallback-src="product?.secondaryImageUrl ? getOptimizedImageUrl(product.secondaryImageUrl) : null"
+                alt="Product"
+                class="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+              />
+              <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50 p-2 text-center">
+                <i class="fa-solid fa-image text-2xl opacity-20 mb-1"></i>
+                <button
+                  v-if="isAdmin || isSuperAdmin"
+                  @click.stop="triggerCardPhotoUpload(product)"
+                  :disabled="uploading[product.productName]"
+                  class="px-2 py-0.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold rounded-lg shadow text-[10px] flex items-center gap-1 transition-all"
+                >
+                  <i v-if="uploading[product.productName]" class="fa-solid fa-spinner fa-spin text-[9px]"></i>
+                  <i v-else class="fa-solid fa-camera text-[9px]"></i>
+                  <span>Upload</span>
+                </button>
+              </div>
+
+              <!-- Floating Cart Controls / Add Button on Image -->
+              <div 
+                v-if="getCartQty(product) > 0" 
+                class="absolute bottom-2 right-2 z-20 flex items-center gap-1 p-0.5 bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-amber-200/80 animate-fade-in"
+                @click.stop
+              >
+                <button 
+                  @click.stop="updateCart(product, -1)" 
+                  class="w-6 h-6 flex items-center justify-center rounded-full text-slate-700 hover:bg-slate-100 active:scale-90 transition-all"
+                  title="Decrease"
+                >
+                  <i class="fa-solid fa-minus text-[9px]"></i>
+                </button>
+                <span class="min-w-[16px] text-center text-xs font-black text-slate-900 px-0.5">
+                  {{ getCartQty(product) }}
+                </span>
+                <button 
+                  @click.stop="updateCart(product, 1)" 
+                  class="w-6 h-6 flex items-center justify-center rounded-full bg-[#18181b] text-amber-400 hover:bg-black active:scale-90 transition-all shadow-xs"
+                  title="Increase"
+                >
+                  <i class="fa-solid fa-plus text-[9px]"></i>
+                </button>
+              </div>
+              <button
+                v-else-if="product.quantity > 0"
+                @click.stop="addToCart(product)"
+                class="absolute bottom-2 right-2 z-20 w-8 h-8 rounded-full bg-white/95 backdrop-blur-md text-slate-800 shadow-md border border-slate-200/80 flex items-center justify-center hover:bg-[#18181b] hover:text-amber-400 active:scale-90 transition-all group-hover/card:scale-105"
+                title="Add to cart"
+              >
+                <i class="fa-solid fa-plus text-xs"></i>
+              </button>
+            </div>
+
+            <!-- Content Area (Catalog Format) -->
+            <div class="p-2.5 flex flex-col flex-1 justify-between bg-white">
+              <div>
+                <div class="flex items-start justify-between gap-1 mb-1">
+                  <h4 class="text-[11px] sm:text-xs font-black font-['Clash_Display'] uppercase text-slate-900 leading-snug line-clamp-1 group-hover/card:text-[#c59b27] transition-colors" :title="product.productName">
+                    {{ getCatalogSpecs(product).article || getCleanProductName(product.productName) }}
+                  </h4>
+                  <span v-if="getCatalogSpecs(product).sole" class="text-[8px] font-black uppercase px-1 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200/60 shrink-0">
+                    {{ getCatalogSpecs(product).sole }}
+                  </span>
+                </div>
+
+                <!-- Color & Size Spec -->
+                <div class="flex items-center justify-between mt-1 text-[10px]">
+                  <div v-if="getCatalogSpecs(product).color" class="flex items-center gap-1 max-w-[85px]">
+                    <span class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: getCatalogSpecs(product).color.hex }"></span>
+                    <span class="font-bold uppercase tracking-wider text-slate-700 text-[9px] truncate">{{ getCatalogSpecs(product).color.text }}</span>
+                  </div>
+                  <span v-else class="text-slate-400 text-[9px]">—</span>
+
+                  <span v-if="getCatalogSpecs(product).size" class="font-bold text-slate-600 px-1 py-0.5 rounded bg-slate-100 text-[9px] font-mono border border-slate-200/50">
+                    {{ getCatalogSpecs(product).size }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Footer: Price & Stock -->
+              <div class="mt-2 pt-1 border-t border-slate-100 flex items-baseline justify-between">
+                <div class="text-xs sm:text-sm font-black text-slate-950 font-mono">
+                  <span class="text-[9px] font-bold text-slate-400 mr-0.5">MRP ₹</span>{{ getCatalogSpecs(product).mrp || getPriceInfo(product.productName).price }}
+                </div>
+                <span :class="product.quantity > 0 ? 'text-slate-400' : 'text-rose-500 font-bold'" class="text-[10px]">
+                  {{ product.quantity > 0 ? `${product.quantity} prs` : 'Out of Stock' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </template>
+        </div>
+        
+        <!-- Infinite Scroll Sentinel & Load More -->
+        <div v-if="hasMoreSearchResults" ref="searchLoadMoreRef" class="py-6 flex flex-col items-center justify-center gap-2 pb-12">
+          <button
+            @click="loadMore"
+            class="px-6 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-amber-600 font-bold text-xs rounded-xl shadow-sm transition-all flex items-center gap-2 active:scale-95"
+          >
+            <span>Load More Results ({{ visibleSearchResults.length }} of {{ displayedSearchResults.length }})</span>
+            <i class="fa-solid fa-chevron-down text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State if no other results and no selected item -->
+      <div v-else-if="!selectedItem" class="text-center py-16 bg-white rounded-3xl border border-dashed border-slate-200">
+        <i class="fa-solid fa-magnifying-glass text-4xl text-slate-300 mb-2"></i>
+        <p class="text-sm font-bold text-slate-600">No products found matching "{{ searchQuery }}"</p>
+        <p v-if="inStockOnly" class="text-xs text-amber-600 mt-1 font-medium">"In Stock Only" filter is active</p>
+        <button @click="clearSearch" class="mt-3 px-4 py-2 bg-[#18181b] text-white text-xs font-bold rounded-xl">
+          Clear Search
+        </button>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         2. CATEGORY PRODUCT GRID: Shown directly under bubbles when a bubble is clicked
+         ══════════════════════════════════════════════════════════ -->
+    <section v-else-if="activeTab !== 'All'" class="mt-4 px-3 sm:px-6">
+      <div class="flex items-center justify-between mb-3 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-sm sm:text-base font-black font-['Clash_Display'] text-slate-900 uppercase truncate">
+            {{ getActiveTabLabel() }}
+          </span>
+          <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-black shrink-0">
+            {{ activeTab === 'ParagonCore' ? paragonCoreList.length + ' Core Models' : displayedTabProducts.length + ' items' }}
+          </span>
+        </div>
+        <button
+          @click="selectTab('All')"
+          class="text-xs font-bold text-slate-500 hover:text-slate-900 flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-all shrink-0"
+        >
+          <i class="fa-solid fa-xmark text-[10px]"></i>
+          <span>Show All</span>
+        </button>
+      </div>
+
+      <!-- Consolidated Product Grid: Core models unified into single size-selector cards; others as individual cards -->
+      <div v-if="displayedTabProducts.length > 0">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4 pb-6">
+          <template v-for="product in visibleTabProducts" :key="product.isCore ? product.id : product.productName">
+          <ParagonCoreCard
+            v-if="product.isCore"
+            :core="product.core"
+            @open-image-popup="$emit('open-image-popup', $event)"
+          />
+          <div
+            v-else
+            class="flex flex-col bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200/70 overflow-hidden relative group/card"
+          >
+          <!-- Image Area -->
+          <div 
+            class="relative w-full aspect-[4/5] bg-slate-50 cursor-pointer overflow-hidden"
+            @click="$emit('open-image-popup', product)"
+          >
+            <!-- Out of Stock Overlay -->
+            <div v-if="product.quantity <= 0" class="absolute inset-0 z-10 bg-slate-50/80 backdrop-blur-[2px] flex items-center justify-center">
+              <span class="px-2.5 py-0.5 bg-slate-200 text-slate-500 text-[10px] font-bold rounded-full border border-slate-300">Out of Stock</span>
+            </div>
+
+            <!-- Admin Controls Overlay -->
+            <div v-if="isAdmin || isSuperAdmin" class="absolute top-1.5 right-1.5 z-30 flex items-center gap-1" @click.stop>
+              <button
+                @click.stop="triggerCardPhotoUpload(product)"
+                :disabled="uploading[product.productName]"
+                class="h-6 px-1.5 bg-white/95 backdrop-blur-md rounded-md shadow border border-slate-200 hover:border-amber-400 text-slate-700 hover:text-amber-600 text-[10px] font-bold flex items-center gap-1 transition-all active:scale-95"
+                :title="getProductCardImage(product) ? 'Change Photo' : 'Upload Photo'"
+              >
+                <i v-if="uploading[product.productName]" class="fa-solid fa-spinner fa-spin text-amber-500 text-[9px]"></i>
+                <i v-else class="fa-solid fa-camera text-[9px] text-amber-500"></i>
+                <span class="hidden sm:inline">{{ getProductCardImage(product) ? 'Edit' : 'Add' }}</span>
+              </button>
+              <button
+                v-if="getProductCardImage(product)"
+                @click.stop="handleCardDeletePhoto(product)"
+                :disabled="uploading[product.productName]"
+                class="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-md shadow transition-all active:scale-95"
+                title="Remove Photo"
+              >
+                <i class="fa-solid fa-trash text-[9px]"></i>
+              </button>
+            </div>
+
+            <div v-if="isProductStaged(product)" class="absolute bottom-1.5 right-1.5 z-20 px-1.5 py-0.5 rounded-full bg-emerald-600/90 backdrop-blur-sm text-white text-[9px] font-black flex items-center gap-1 shadow">
+              <i class="fa-solid fa-check text-[8px]"></i> Staged
+            </div>
+
+            <CachedImage
+              v-if="getProductCardImage(product)"
+              :src="getOptimizedImageUrl(getProductCardImage(product))"
+              :fallback-src="product?.secondaryImageUrl ? getOptimizedImageUrl(product.secondaryImageUrl) : null"
+              alt="Product"
+              class="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+            />
+            <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50 p-2 text-center">
+              <i class="fa-solid fa-image text-2xl opacity-20 mb-1"></i>
+              <button
+                v-if="isAdmin || isSuperAdmin"
+                @click.stop="triggerCardPhotoUpload(product)"
+                :disabled="uploading[product.productName]"
+                class="px-2 py-0.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold rounded-lg shadow text-[10px] flex items-center gap-1 transition-all"
+              >
+                <i v-if="uploading[product.productName]" class="fa-solid fa-spinner fa-spin text-[9px]"></i>
+                <i v-else class="fa-solid fa-camera text-[9px]"></i>
+                <span>Upload</span>
+              </button>
+            </div>
+
+            <!-- Floating Cart Controls / Add Button on Image -->
+            <div 
+              v-if="getCartQty(product) > 0" 
+              class="absolute bottom-2 right-2 z-20 flex items-center gap-1 p-0.5 bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-amber-200/80 animate-fade-in"
+              @click.stop
+            >
+              <button 
+                @click.stop="updateCart(product, -1)" 
+                class="w-6 h-6 flex items-center justify-center rounded-full text-slate-700 hover:bg-slate-100 active:scale-90 transition-all"
+                title="Decrease"
+              >
+                <i class="fa-solid fa-minus text-[9px]"></i>
+              </button>
+              <span class="min-w-[16px] text-center text-xs font-black text-slate-900 px-0.5">
+                {{ getCartQty(product) }}
+              </span>
+              <button 
+                @click.stop="updateCart(product, 1)" 
+                class="w-6 h-6 flex items-center justify-center rounded-full bg-[#18181b] text-amber-400 hover:bg-black active:scale-90 transition-all shadow-xs"
+                title="Increase"
+              >
+                <i class="fa-solid fa-plus text-[9px]"></i>
+              </button>
+            </div>
+            <button
+              v-else-if="product.quantity > 0"
+              @click.stop="addToCart(product)"
+              class="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-white/95 text-slate-800 hover:bg-[#18181b] hover:text-amber-400 shadow-md border border-slate-200/60 flex items-center justify-center transition-all active:scale-90"
+              title="Add to Cart"
+            >
+              <i class="fa-solid fa-plus text-[10px]"></i>
+            </button>
+          </div>
+
+          <!-- Product Details (Catalog Format) -->
+          <div class="p-2.5 flex flex-col flex-1 justify-between bg-white">
+            <div>
+              <div class="flex items-start justify-between gap-1 mb-1">
+                <h4 class="text-[11px] sm:text-xs font-black font-['Clash_Display'] uppercase text-slate-900 leading-snug line-clamp-1 group-hover/card:text-[#c59b27] transition-colors" :title="product.productName">
+                  {{ getCatalogSpecs(product).article || getCleanProductName(product.productName) }}
+                </h4>
+                <span v-if="getCatalogSpecs(product).sole" class="text-[8px] font-black uppercase px-1 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200/60 shrink-0">
+                  {{ getCatalogSpecs(product).sole }}
+                </span>
+              </div>
+
+              <!-- Color & Size Spec -->
+              <div class="flex items-center justify-between mt-1 text-[10px]">
+                <div v-if="getCatalogSpecs(product).color" class="flex items-center gap-1 max-w-[85px]">
+                  <span class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: getCatalogSpecs(product).color.hex }"></span>
+                  <span class="font-bold uppercase tracking-wider text-slate-700 text-[9px] truncate">{{ getCatalogSpecs(product).color.text }}</span>
+                </div>
+                <span v-else class="text-slate-400 text-[9px]">—</span>
+
+                <span v-if="getCatalogSpecs(product).size" class="font-bold text-slate-600 px-1 py-0.5 rounded bg-slate-100 text-[9px] font-mono border border-slate-200/50">
+                  {{ getCatalogSpecs(product).size }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Footer: Price & Stock -->
+            <div class="mt-2 pt-1 border-t border-slate-100 flex items-baseline justify-between">
+              <div class="text-xs sm:text-sm font-black text-slate-950 font-mono">
+                <span class="text-[9px] font-bold text-slate-400 mr-0.5">MRP ₹</span>{{ getCatalogSpecs(product).mrp || getPriceInfo(product.productName).price }}
+              </div>
+              <span :class="product.quantity > 0 ? 'text-slate-400' : 'text-rose-500 font-bold'" class="text-[10px]">
+                {{ product.quantity > 0 ? `${product.quantity} prs` : 'Out of Stock' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+        
+    <!-- Infinite Scroll Sentinel & Load More -->
+        <div v-if="hasMoreTabProducts" ref="tabLoadMoreRef" class="py-6 flex flex-col items-center justify-center gap-2 pb-12">
+          <button
+            @click="loadMore"
+            class="px-6 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-amber-600 font-bold text-xs rounded-xl shadow-sm transition-all flex items-center gap-2 active:scale-95"
+          >
+            <span>Load More Products ({{ visibleTabProducts.length }} of {{ displayedTabProducts.length }})</span>
+            <i class="fa-solid fa-chevron-down text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else class="text-center py-16 bg-white rounded-3xl border border-dashed border-slate-200">
+        <i class="fa-solid fa-box-open text-4xl text-slate-300 mb-2"></i>
+        <p class="text-sm font-bold text-slate-600">No products found in this category</p>
+        <button @click="selectTab('All')" class="mt-3 px-4 py-2 bg-[#18181b] text-white text-xs font-bold rounded-xl">
+          Back to All Products
+        </button>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         FULL STOREFRONT SHOWCASE: Shown when activeTab === 'All'
+         ══════════════════════════════════════════════════════════ -->
+    <template v-else>
+      <!-- UPLOAD MODE FEED: Shown when cleanView === 'upload' and activeTab === 'All' (Admin only) -->
+      <section v-if="cleanView === 'upload' && (isAdmin || isSuperAdmin)" class="mt-4 px-3 sm:px-6 pb-12">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 bg-gradient-to-r from-sky-50 via-white to-amber-50/40 p-4 rounded-3xl border border-sky-200/80 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-sky-600 text-white flex items-center justify-center shadow-md shadow-sky-600/20 shrink-0">
+              <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-base sm:text-lg font-black font-['Clash_Display'] text-slate-900 tracking-tight">
+                  Upload Mode • Missing Photos
+                </h2>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800 border border-sky-300">
+                  {{ uploadModeProducts.length }} Articles
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 font-medium mt-0.5">
+                Sorted from most recent to least recent. Tap any camera icon to snap or upload a photo.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button
+              v-if="pendingUploads && pendingUploads.length > 0"
+              @click="showCommitPreviewModal = true"
+              class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-sm flex items-center gap-1.5 transition-all active:scale-95 animate-pulse"
+            >
+              <i class="fa-solid fa-code-commit text-xs"></i>
+              <span>Review {{ pendingUploads.length }} Staged</span>
+            </button>
+            <button
+              @click="appStore.setCleanView('clean')"
+              class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold transition-all shadow-xs"
+            >
+              Exit Upload Mode
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty state if all articles have photos -->
+        <div v-if="uploadModeProducts.length === 0" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
+          <i class="fa-solid fa-circle-check text-4xl text-emerald-500 mb-2"></i>
+          <h3 class="text-base font-black text-slate-800">100% Photo Coverage!</h3>
+          <p class="text-xs text-slate-400 mt-1">All products in the catalog currently have photos uploaded.</p>
+        </div>
+
+        <!-- Upload Grid -->
+        <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div
+            v-for="product in uploadModeProducts"
+            :key="product.productName"
+            class="flex flex-col bg-white rounded-2xl shadow-xs hover:shadow-md transition-all duration-300 border border-slate-200/80 overflow-hidden relative group/card"
+          >
+            <!-- Image Area / Upload Trigger -->
+            <div
+              class="relative w-full aspect-[4/5] bg-slate-50 flex flex-col items-center justify-center p-3 text-center cursor-pointer border-b border-slate-100 group-hover/card:bg-sky-50/30 transition-colors"
+              @click="triggerCardPhotoUpload(product)"
+            >
+              <!-- Prominent Stock Quantity Badge (Top-Left) -->
+              <div class="absolute top-2 left-2 z-10">
+                <span
+                  class="px-2.5 py-1 bg-emerald-600 text-white text-[10px] sm:text-xs font-black rounded-lg shadow-md flex items-center gap-1 ring-1 ring-white/40"
+                >
+                  <i class="fa-solid fa-boxes-stacked text-[9px]"></i>
+                  <span>{{ product.quantity }} pairs</span>
+                </span>
+              </div>
+
+              <!-- Recency Badge -->
+              <div v-if="formatProductRecencyDate(product)" class="absolute top-2 right-2 z-10">
+                <span class="px-2 py-0.5 bg-white/90 backdrop-blur-xs text-slate-600 text-[9px] font-bold rounded-full border border-slate-200 shadow-xs flex items-center gap-1">
+                  <i class="fa-solid fa-clock text-[8px] text-slate-400"></i>
+                  <span>{{ formatProductRecencyDate(product) }}</span>
+                </span>
+              </div>
+
+              <!-- Uploading Spinner or Camera Trigger -->
+              <div v-if="uploading[product.productName]" class="flex flex-col items-center justify-center text-sky-600">
+                <i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i>
+                <span class="text-xs font-bold">Uploading...</span>
+              </div>
+              <div v-else-if="getProductCardImage(product)" class="w-full h-full relative">
+                <img :src="getProductCardImage(product)" :alt="product.productName" class="w-full h-full object-cover rounded-xl" />
+                <div class="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black flex items-center gap-1 shadow-md">
+                  <i class="fa-solid fa-check text-[8px]"></i> Staged
+                </div>
+              </div>
+              <div v-else class="flex flex-col items-center justify-center text-slate-400 group-hover/card:text-sky-600 transition-colors">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 group-hover/card:bg-sky-100 flex items-center justify-center mb-2 transition-colors shadow-xs">
+                  <i class="fa-solid fa-camera text-xl"></i>
+                </div>
+                <span class="text-xs font-bold text-slate-700 group-hover/card:text-sky-700">Add Photo</span>
+                <span class="text-[10px] text-slate-400 mt-0.5">Tap to capture / upload</span>
+              </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="p-3 flex-1 flex flex-col justify-between">
+              <div>
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900 leading-snug line-clamp-1 group-hover/card:text-sky-700 transition-colors">
+                  {{ getCleanProductName(product.productName) }}
+                </h4>
+                <p class="text-[11px] text-slate-500 font-medium mt-0.5 truncate">
+                  {{ product.productName }}
+                </p>
+                <div class="flex items-center gap-1.5 mt-2 flex-wrap text-[10px]">
+                  <span v-if="product.groupName" class="px-1.5 py-0.5 bg-slate-100 rounded-md font-bold text-slate-600">
+                    {{ product.groupName }}
+                  </span>
+                  <span v-if="getProductSize(product.productName)" class="px-1.5 py-0.5 bg-slate-100 rounded-md font-bold text-slate-700">
+                    {{ getProductSize(product.productName) }}
+                  </span>
+                </div>
+
+                <!-- Dedicated Stock Qty & Price Row -->
+                <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <div class="flex items-center gap-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">Stock:</span>
+                    <span 
+                      class="text-xs font-black px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-extrabold"
+                    >
+                      {{ product.quantity }} prs
+                    </span>
+                  </div>
+                  <span class="font-black text-xs sm:text-sm text-slate-900">
+                    ₹{{ getPriceInfo(product.productName).price }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Bottom Direct Upload Button -->
+              <button
+                @click.stop="triggerCardPhotoUpload(product)"
+                :disabled="uploading[product.productName]"
+                class="mt-3 w-full py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 active:scale-95 text-sky-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-sky-200"
+              >
+                <i v-if="uploading[product.productName]" class="fa-solid fa-spinner fa-spin text-xs"></i>
+                <i v-else class="fa-solid fa-camera text-xs"></i>
+                <span>{{ getProductCardImage(product) ? 'Change Photo' : 'Upload Photo' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Standard Storefront Showcase (when cleanView !== 'upload') -->
+      <template v-else>
+        <!-- ROTATING HERO CAROUSEL: Sub-Brand Catalog Coverpages -->
+        <div class="mt-3 sm:mt-4 px-3 sm:px-6">
+          <CatalogHeroCarousel 
+            @select-tab="selectTab"
+          />
+        </div>
+
+      <!-- 4. PARAGON 40% DISCOUNT STRIP: Eye-Catching Marquee -->
+      <div class="mt-4 sm:mt-5 px-3 sm:px-6">
+        <div 
+          class="w-full h-14 sm:h-16 rounded-2xl overflow-hidden relative cursor-pointer bg-gradient-to-r from-red-600 via-red-700 to-red-600 shadow-md flex items-center group transition-transform duration-300 hover:scale-[1.01]"
+          @click="selectTab('ParagonDiscount')"
+        >
+          <!-- Logo Section -->
+          <div class="w-20 sm:w-28 h-full bg-white flex items-center justify-center rounded-r-2xl border-r-2 border-red-800 z-10 shadow-md px-2 shrink-0">
+            <CachedImage
+              :src="ParagonLogo"
+              alt="Paragon"
+              class="h-2/3 w-auto object-contain"
+              transformations="w_200,c_fit"
+            />
+          </div>
+          
+          <!-- Moving Marquee Text -->
+          <div class="flex-1 h-full overflow-hidden flex items-center relative">
+            <div class="marquee-content text-white font-black font-['Clash_Display'] text-sm sm:text-lg tracking-wider uppercase drop-shadow-md flex whitespace-nowrap">
+              <span class="mx-3">🌟 40% DISCOUNT ON SELECTED ARTICLES - TAP HERE 🌟</span>
+              <span class="mx-3">🌟 40% DISCOUNT ON SELECTED ARTICLES - TAP HERE 🌟</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. NEW ARRIVALS: Horizontal Product Stack -->
+      <section class="mt-6 px-3 sm:px-6 overflow-hidden">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-base sm:text-xl font-black font-['Clash_Display'] holographic-text uppercase">
+              ✨ New Arrivals
+            </span>
+            <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black">
+              {{ getNewArrivalCount() }}
+            </span>
+          </div>
+          <button 
+            @click="selectTab('NewArrivals')"
+            class="text-xs font-bold text-[#c59b27] hover:text-[#9e782f] transition-colors flex items-center gap-1 bg-amber-50/80 px-2.5 py-1 rounded-lg"
+          >
+            View All <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+
+        <!-- Horizontal Auto-Scrolling Stack -->
+        <div class="relative group/scroll w-full">
+          <div 
+            class="flex overflow-x-auto gap-3.5 pb-2 no-scrollbar"
+            :ref="el => setScroller('new-arrivals', el)"
+            @pointerdown="pauseScroll('new-arrivals')"
+            @pointerup="resumeScroll('new-arrivals')"
+            @pointerleave="resumeScroll('new-arrivals')"
+            @touchstart.passive="pauseScroll('new-arrivals')"
+            @touchend.passive="resumeScroll('new-arrivals')"
+          >
+            <!-- Duplicated block for seamless loop -->
+            <template v-for="loopIndex in 2" :key="'na-loop-'+loopIndex">
+              <!-- Hero Card -->
+              <div 
+                class="flex-shrink-0 w-[130px] sm:w-[190px] aspect-[4/5] sm:aspect-square rounded-2xl overflow-hidden relative group/hero cursor-pointer transition-transform duration-500 hover:scale-[1.02] bg-[#18181b]"
+                @click="selectTab('NewArrivals')"
+              >
+                <CachedImage
+                  v-if="getHeroImage()"
+                  :src="getOptimizedImageUrl(getHeroImage())"
+                  alt="New Arrivals"
+                  class="w-full h-full object-cover rounded-2xl transition-transform duration-1000 group-hover/hero:scale-110 opacity-80"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                
+                <div class="absolute bottom-3 left-3 right-3">
+                  <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span class="text-[8px] font-bold text-white uppercase tracking-widest">New Season</span>
+                  </div>
+                  <h3 class="text-sm sm:text-base font-black text-white leading-tight uppercase font-['Clash_Display']">Latest<br/>Arrivals</h3>
+                  <div class="mt-2 flex items-center gap-1.5 text-white/70 group-hover/hero:text-white text-[11px] font-bold">
+                    <span>Shop Collection</span>
+                    <i class="fa-solid fa-arrow-right text-[9px] transition-transform group-hover/hero:translate-x-1"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Product Cards in Horizontal Row -->
+              <div
+                v-for="product in getNewArrivalProducts().slice(0, 12)"
+                :key="'na-'+product.productName+'-'+loopIndex"
+                class="flex-shrink-0 w-[125px] sm:w-[155px] flex flex-col bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 overflow-hidden relative group/card"
+              >
+                <!-- Image Area -->
+                <div 
+                  class="relative w-full aspect-[4/5] bg-slate-50 cursor-pointer overflow-hidden"
+                  @click="$emit('open-image-popup', product)"
+                >
+                  <!-- Admin Controls Overlay -->
+                  <div v-if="isAdmin || isSuperAdmin" class="absolute top-1.5 right-1.5 z-30 flex items-center gap-1" @click.stop>
+                    <button
+                      @click.stop="triggerCardPhotoUpload(product)"
+                      :disabled="uploading[product.productName]"
+                      class="h-6 px-1.5 bg-white/95 backdrop-blur-md rounded-md shadow border border-slate-200 hover:border-amber-400 text-slate-700 hover:text-amber-600 text-[10px] font-bold flex items-center gap-1 transition-all active:scale-95"
+                      :title="getProductCardImage(product) ? 'Change Photo' : 'Upload Photo'"
+                    >
+                      <i v-if="uploading[product.productName]" class="fa-solid fa-spinner fa-spin text-amber-500 text-[9px]"></i>
+                      <i v-else class="fa-solid fa-camera text-[9px] text-amber-500"></i>
+                      <span class="hidden sm:inline">{{ getProductCardImage(product) ? 'Edit' : 'Add' }}</span>
+                    </button>
+                    <button
+                      v-if="getProductCardImage(product)"
+                      @click.stop="handleCardDeletePhoto(product)"
+                      :disabled="uploading[product.productName]"
+                      class="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-md shadow transition-all active:scale-95"
+                      title="Remove Photo"
+                    >
+                      <i class="fa-solid fa-trash text-[9px]"></i>
+                    </button>
+                  </div>
+
+                  <div v-if="isProductStaged(product)" class="absolute bottom-1.5 right-1.5 z-20 px-1.5 py-0.5 rounded-full bg-emerald-600/90 backdrop-blur-sm text-white text-[9px] font-black flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-check text-[8px]"></i> Staged
+                  </div>
+
+                  <CachedImage
+                    v-if="getProductCardImage(product)"
+                    :src="getOptimizedImageUrl(getProductCardImage(product))"
+                    :fallback-src="product?.secondaryImageUrl ? getOptimizedImageUrl(product.secondaryImageUrl) : null"
+                    alt="Product"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+                  />
+                  <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50 p-2 text-center">
+                    <i class="fa-solid fa-image text-2xl opacity-20 mb-1"></i>
+                    <button
+                      v-if="isAdmin || isSuperAdmin"
+                      @click.stop="triggerCardPhotoUpload(product)"
+                      :disabled="uploading[product.productName]"
+                      class="px-2 py-0.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold rounded-lg shadow text-[10px] flex items-center gap-1 transition-all"
+                    >
+                      <i v-if="uploading[product.productName]" class="fa-solid fa-spinner fa-spin text-[9px]"></i>
+                      <i v-else class="fa-solid fa-camera text-[9px]"></i>
+                      <span>Upload</span>
+                    </button>
+                  </div>
+
+                  <!-- Floating Cart Controls / Add Button on Image -->
+                  <div 
+                    v-if="getCartQty(product) > 0" 
+                    class="absolute bottom-2 right-2 z-20 flex items-center gap-1 p-0.5 bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-amber-200/80 animate-fade-in"
+                    @click.stop
+                  >
+                    <button 
+                      @click.stop="updateCart(product, -1)" 
+                      class="w-6 h-6 flex items-center justify-center rounded-full text-slate-700 hover:bg-slate-100 active:scale-90 transition-all"
+                      title="Decrease"
+                    >
+                      <i class="fa-solid fa-minus text-[9px]"></i>
+                    </button>
+                    <span class="min-w-[16px] text-center text-xs font-black text-slate-900 px-0.5">
+                      {{ getCartQty(product) }}
+                    </span>
+                    <button 
+                      @click.stop="updateCart(product, 1)" 
+                      class="w-6 h-6 flex items-center justify-center rounded-full bg-[#18181b] text-amber-400 hover:bg-black active:scale-90 transition-all shadow-xs"
+                      title="Increase"
+                    >
+                      <i class="fa-solid fa-plus text-[9px]"></i>
+                    </button>
+                  </div>
+                  <button
+                    v-else-if="product.quantity > 0"
+                    @click.stop="addToCart(product)"
+                    class="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-white/95 text-slate-800 hover:bg-[#18181b] hover:text-amber-400 shadow-md border border-slate-200/60 flex items-center justify-center transition-all active:scale-90"
+                    title="Add to Cart"
+                  >
+                    <i class="fa-solid fa-plus text-[10px]"></i>
+                  </button>
+                </div>
+
+                <!-- Product Details -->
+                <div class="p-2 flex flex-col flex-1">
+                  <h4 class="text-[11px] sm:text-xs font-bold text-slate-800 leading-snug line-clamp-1 group-hover/card:text-[#c59b27] transition-colors" :title="product.productName">
+                    {{ getCleanProductName(product.productName) }}
+                  </h4>
+
+                  <div class="flex items-center justify-between mt-1 text-[10px] text-slate-500">
+                    <span v-if="getProductColor(product.productName)" class="flex items-center gap-1 truncate max-w-[50px]">
+                      <span class="w-2 h-2 rounded-full" :style="{ background: getProductColor(product.productName).gradient || getProductColor(product.productName).hex }"></span>
+                      <span class="capitalize truncate">{{ getProductColor(product.productName).text }}</span>
+                    </span>
+                    <span v-if="getProductSize(product.productName)" class="font-bold text-slate-600 px-1 rounded bg-slate-100">
+                      {{ getProductSize(product.productName) }}
+                    </span>
+                  </div>
+
+                  <div class="mt-2 flex items-baseline justify-between pt-1 border-t border-slate-100">
+                    <div class="text-xs sm:text-sm font-black text-slate-900">
+                      <span class="text-[10px] font-medium mr-[1px]">₹</span>{{ getPriceInfo(product.productName).price }}
+                    </div>
+                    <span class="text-[10px] font-bold text-slate-400">
+                      {{ product.quantity }} prs
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- 7. CURATED BRAND SHOWCASES WITH PRODUCTS BELOW -->
+      <section class="mt-8 px-3 sm:px-6 space-y-6">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-extrabold uppercase tracking-widest text-slate-400">
+            FEATURED BRAND SHOWCASES
+          </h2>
+          <span class="text-[11px] font-bold text-amber-700">Live Inventory</span>
+        </div>
+
+        <!-- Each Big Brand Gallery -->
+        <div
+          v-for="brand in bigBrandCards"
+          :key="brand.id"
+          class="bg-white rounded-3xl p-3.5 sm:p-5 border border-slate-200/80 shadow-sm"
+        >
+          <!-- Brand Header -->
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="h-8 sm:h-10 w-20 sm:w-28 bg-slate-50 rounded-xl p-1 border border-slate-100 flex items-center justify-center">
+                <CachedImage
+                  :src="brand.logo"
+                  :alt="brand.label"
+                  class="h-full w-auto object-contain"
+                />
+              </div>
+              <div>
+                <h3 class="text-base sm:text-lg font-black font-['Clash_Display'] text-slate-900 leading-none uppercase">
+                  {{ brand.label }}
+                </h3>
+                <span class="text-[11px] text-slate-400 font-medium">
+                  {{ getCount(brand.groupNames) }} items available
+                </span>
+              </div>
+            </div>
+
+            <button
+              @click="selectTab(brand.id)"
+              class="text-xs font-bold text-[#c59b27] hover:text-[#9e782f] flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-xl transition-colors"
+            >
+              View All <i class="fa-solid fa-arrow-right text-[9px]"></i>
+            </button>
+          </div>
+
+          <!-- Horizontal Scroll of Products for This Brand -->
+          <div class="overflow-x-auto no-scrollbar -mx-1 px-1">
+            <div class="flex items-stretch gap-3 min-w-max pb-1">
+              <div
+                v-for="product in getBrandProducts(brand.groupNames).slice(0, 10)"
+                :key="'brand-p-'+product.productName"
+                class="w-[125px] sm:w-[150px] flex flex-col bg-slate-50/70 rounded-2xl border border-slate-200/60 overflow-hidden relative group/bcard hover:bg-white hover:shadow-md transition-all"
+              >
+                <div 
+                  class="relative w-full aspect-[4/5] bg-white cursor-pointer overflow-hidden"
+                  @click="$emit('open-image-popup', product)"
+                >
+                  <!-- Admin Controls Overlay -->
+                  <div v-if="isAdmin || isSuperAdmin" class="absolute top-1.5 right-1.5 z-30 flex items-center gap-1" @click.stop>
+                    <button
+                      @click.stop="triggerCardPhotoUpload(product)"
+                      :disabled="uploading[product.productName]"
+                      class="h-6 px-1.5 bg-white/95 backdrop-blur-md rounded-md shadow border border-slate-200 hover:border-amber-400 text-slate-700 hover:text-amber-600 text-[10px] font-bold flex items-center gap-1 transition-all active:scale-95"
+                      :title="getProductCardImage(product) ? 'Change Photo' : 'Upload Photo'"
+                    >
+                      <i v-if="uploading[product.productName]" class="fa-solid fa-spinner fa-spin text-amber-500 text-[9px]"></i>
+                      <i v-else class="fa-solid fa-camera text-[9px] text-amber-500"></i>
+                      <span class="hidden sm:inline">{{ getProductCardImage(product) ? 'Edit' : 'Add' }}</span>
+                    </button>
+                    <button
+                      v-if="getProductCardImage(product)"
+                      @click.stop="handleCardDeletePhoto(product)"
+                      :disabled="uploading[product.productName]"
+                      class="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-md shadow transition-all active:scale-95"
+                      title="Remove Photo"
+                    >
+                      <i class="fa-solid fa-trash text-[9px]"></i>
+                    </button>
+                  </div>
+
+                  <div v-if="isProductStaged(product)" class="absolute bottom-1.5 right-1.5 z-20 px-1.5 py-0.5 rounded-full bg-emerald-600/90 backdrop-blur-sm text-white text-[9px] font-black flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-check text-[8px]"></i> Staged
+                  </div>
+
+                  <CachedImage
+                    v-if="getProductCardImage(product)"
+                    :src="getOptimizedImageUrl(getProductCardImage(product))"
+                    :fallback-src="product?.secondaryImageUrl ? getOptimizedImageUrl(product.secondaryImageUrl) : null"
+                    alt="Product"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover/bcard:scale-105"
+                  />
+                  <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50 p-2 text-center">
+                    <i class="fa-solid fa-image text-xl opacity-20 mb-1"></i>
+                    <button
+                      v-if="isAdmin || isSuperAdmin"
+                      @click.stop="triggerCardPhotoUpload(product)"
+                      :disabled="uploading[product.productName]"
+                      class="px-2 py-0.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold rounded-lg shadow text-[10px] flex items-center gap-1 transition-all"
+                    >
+                      <i v-if="uploading[product.productName]" class="fa-solid fa-spinner fa-spin text-[9px]"></i>
+                      <i v-else class="fa-solid fa-camera text-[9px]"></i>
+                      <span>Upload</span>
+                    </button>
+                  </div>
+
+                  <!-- Floating Cart Controls / Add Button on Image -->
+                  <div 
+                    v-if="getCartQty(product) > 0" 
+                    class="absolute bottom-2 right-2 z-20 flex items-center gap-1 p-0.5 bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-amber-200/80 animate-fade-in"
+                    @click.stop
+                  >
+                    <button 
+                      @click.stop="updateCart(product, -1)" 
+                      class="w-5 h-5 flex items-center justify-center rounded-full text-slate-700 hover:bg-slate-100 active:scale-90 transition-all"
+                      title="Decrease"
+                    >
+                      <i class="fa-solid fa-minus text-[8px]"></i>
+                    </button>
+                    <span class="min-w-[14px] text-center text-[11px] font-black text-slate-900 px-0.5">
+                      {{ getCartQty(product) }}
+                    </span>
+                    <button 
+                      @click.stop="updateCart(product, 1)" 
+                      class="w-5 h-5 flex items-center justify-center rounded-full bg-[#18181b] text-amber-400 hover:bg-black active:scale-90 transition-all shadow-xs"
+                      title="Increase"
+                    >
+                      <i class="fa-solid fa-plus text-[8px]"></i>
+                    </button>
+                  </div>
+                  <button
+                    v-else-if="product.quantity > 0"
+                    @click.stop="addToCart(product)"
+                    class="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-white text-slate-800 shadow border border-slate-200 flex items-center justify-center transition-all hover:bg-[#18181b] hover:text-amber-400 active:scale-90"
+                    title="Add to Cart"
+                  >
+                    <i class="fa-solid fa-plus text-[9px]"></i>
+                  </button>
+                </div>
+
+                <div class="p-2 flex flex-col flex-1">
+                  <h4 class="text-[11px] font-bold text-slate-800 truncate" :title="product.productName">
+                    {{ getCleanProductName(product.productName) }}
+                  </h4>
+                  <div class="mt-1 flex items-baseline justify-between">
+                    <span class="text-xs font-black text-slate-900">₹{{ getPriceInfo(product.productName).price }}</span>
+                    <span class="text-[10px] font-semibold text-slate-400">{{ product.quantity }} prs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. GENERAL PACKING: Bento/Masonry Design -->
+      <section class="mt-8 px-3 sm:px-6">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-extrabold uppercase tracking-widest text-slate-400">
+            GENERAL PACKING
+          </h2>
+          <span class="text-[11px] font-bold text-amber-700">Bulk & Pairs</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <!-- Box Packing Card -->
+          <div
+            @click="selectTab('BoxPacking')"
+            class="rounded-3xl p-5 bg-[#18181b] text-white cursor-pointer relative overflow-hidden group shadow-md hover:shadow-xl transition-all"
+          >
+            <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
+            <div class="relative z-10 flex items-start justify-between">
+              <div>
+                <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-500/30">
+                  Premium
+                </span>
+                <h3 class="text-2xl font-black font-['Clash_Display'] mt-2 uppercase leading-none text-white">
+                  Box Packing
+                </h3>
+                <p class="text-xs text-slate-400 mt-1 font-medium">{{ getCount(boxGroupNames) }} Products Available</p>
+              </div>
+              <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-amber-400 text-lg group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-box"></i>
+              </div>
+            </div>
+            <div class="mt-4 flex items-center gap-2 text-amber-400 text-xs font-bold">
+              <span>Explore Box Packing</span>
+              <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Loose Packing Card -->
+          <div
+            @click="selectTab('LoosePacking')"
+            class="rounded-3xl p-5 bg-gradient-to-br from-slate-900 to-slate-800 text-white cursor-pointer relative overflow-hidden group shadow-md hover:shadow-xl transition-all"
+          >
+            <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
+            <div class="relative z-10 flex items-start justify-between">
+              <div>
+                <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-black uppercase tracking-wider border border-purple-500/30">
+                  Economy
+                </span>
+                <h3 class="text-2xl font-black font-['Clash_Display'] mt-2 uppercase leading-none text-white">
+                  Loose Packing
+                </h3>
+                <p class="text-xs text-slate-400 mt-1 font-medium">{{ getCount(looseGroupNames) }} Products Available</p>
+              </div>
+              <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-purple-400 text-lg group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-bag-shopping"></i>
+              </div>
+            </div>
+            <div class="mt-4 flex items-center gap-2 text-purple-400 text-xs font-bold">
+              <span>Explore Loose Packing</span>
+              <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. MID BRANDS SECTION -->
+      <section class="mt-8 px-3 sm:px-6">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-extrabold uppercase tracking-widest text-slate-400">
+            MORE BRANDS
+          </h2>
+          <span class="text-[11px] font-bold text-amber-700">Explore Variety</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
+          <SlideshowCard
+            v-for="card in midBrandCards"
+            :key="card.id"
+            :card="card"
+            :images="getImages(card.groupNames, 4)"
+            :count="getCount(card.groupNames)"
+            aspectClass="aspect-[4/3]"
+            @click="selectTab(card.id)"
+          />
+        </div>
+      </section>
+
+      <!-- 10. EXPLORE ALL CTA -->
+      <div class="mt-10 mb-8 px-4 flex justify-center">
+        <button 
+          @click="selectTab('BrowseAll')"
+          class="group relative inline-flex items-center justify-center px-8 py-4 bg-[#18181b] text-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl hover:bg-black active:scale-98 transition-all duration-300 w-full sm:w-auto"
+        >
+          <div class="relative flex items-center gap-3">
+            <span class="font-['Clash_Display'] font-bold text-base sm:text-lg uppercase tracking-wider text-amber-400">
+              Browse All Products
+            </span>
+            <i class="fa-solid fa-arrow-right text-base text-amber-400 transition-transform duration-300 group-hover:translate-x-2"></i>
+          </div>
+        </button>
+      </div>
+    </template>
+  </template>
+
+    <!-- ══════════════════════════════════════════════════════════
+         BOTTOM BAR: Fixed Search Bar & Autocomplete
+         ══════════════════════════════════════════════════════════ -->
+    <div 
+      class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-3 py-2 sm:px-6 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] transition-all"
+      style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem));"
+      ref="searchContainerRef"
+    >
+      <div class="max-w-2xl mx-auto relative">
+        <!-- Search Input Bar -->
+        <div class="flex items-center gap-2 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 shadow-sm p-1 pl-3.5 focus-within:border-[#c59b27] focus-within:bg-white focus-within:ring-2 focus-within:ring-amber-500/10 transition-all">
+          <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm shrink-0"></i>
+          <input
+            v-model="localQuery"
+            @focus="showDropdown = true"
+            @keydown.enter="handleSearchSubmit(localQuery)"
+            type="text"
+            placeholder="Search 2,900+ products, brands, models..."
+            class="flex-1 min-w-0 bg-transparent text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none py-1.5"
+          />
+          <button
+            v-if="localQuery"
+            @click="clearSearch"
+            class="w-6 h-6 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 shrink-0"
+            title="Clear search"
+          >
+            <i class="fa-solid fa-xmark text-xs"></i>
+          </button>
+        </div>
+
+        <!-- Autocomplete Dropdown (Expands UPWARD) -->
+        <transition
+          enter-active-class="transition duration-200 ease-out"
+          enter-from-class="opacity-0 translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-150 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 translate-y-2"
+        >
+          <div
+            v-if="showDropdown && localQuery.trim().length > 0"
+            class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-50 max-h-[55vh] flex flex-col"
+          >
+            <!-- Dropdown Header: Query submit option -->
+            <div class="p-2 border-b border-slate-100 bg-slate-50/70">
+              <button
+                @click="handleSearchSubmit(localQuery)"
+                class="w-full text-left px-3 py-2 rounded-xl bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-900 transition-colors flex items-center justify-between group border border-slate-200/60 shadow-xs"
+              >
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                  </div>
+                  <div class="truncate">
+                    <span class="text-xs font-bold">Search for "</span>
+                    <span class="text-xs font-black text-amber-600">{{ localQuery.trim() }}</span>
+                    <span class="text-xs font-bold">"</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-400 group-hover:text-amber-700 shrink-0">
+                  <span>View results</span>
+                  <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </div>
+              </button>
+            </div>
+
+            <!-- Product Suggestions List -->
+            <div class="overflow-y-auto p-1.5 divide-y divide-slate-100/80">
+              <button
+                v-for="product in searchSuggestions"
+                :key="product.productName"
+                @click="handleProductSelect(product)"
+                class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-3 group/item"
+              >
+                <div class="w-11 h-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200/60">
+                  <img v-if="getProductCardImage(product)" :src="getOptimizedImageUrl(getProductCardImage(product))" class="w-full h-full object-cover" />
+                  <div v-else class="w-full h-full flex items-center justify-center text-slate-300">
+                    <i class="fa-solid fa-box text-sm"></i>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs sm:text-sm font-bold text-slate-800 truncate group-hover/item:text-[#c59b27] transition-colors">
+                    {{ getCleanProductName(product.productName) }}
+                  </div>
+                  <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
+                    <span v-if="getProductColor(product.productName)" class="flex items-center gap-1">
+                      <span class="w-2 h-2 rounded-full" :style="{ background: getProductColor(product.productName).gradient || getProductColor(product.productName).hex }"></span>
+                      <span class="capitalize">{{ getProductColor(product.productName).text }}</span>
+                    </span>
+                    <span v-if="getProductSize(product.productName)" class="font-semibold text-slate-600">
+                      {{ getProductSize(product.productName) }}
+                    </span>
+                    <span class="font-black text-slate-900">
+                      ₹{{ getPriceInfo(product.productName).price }}
+                    </span>
+                    <span :class="product.quantity > 0 ? 'text-emerald-600' : 'text-rose-500'" class="font-bold">
+                      {{ product.quantity > 0 ? `${product.quantity} pairs` : 'Out of Stock' }}
+                    </span>
+                  </div>
+                </div>
+              </button>
+
+              <div v-if="searchSuggestions.length === 0" class="px-4 py-6 text-center text-slate-400 text-xs">
+                No specific items matching "{{ localQuery.trim() }}"
+              </div>
+            </div>
+          </div>
+        </transition>
+      </div>
+    </div>
+
+    <!-- Commit Preview Modal -->
+    <CommitPreviewModal
+      :show="showCommitPreviewModal"
+      @close="showCommitPreviewModal = false"
+      @committed="showCommitPreviewModal = false"
+    />
+
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
+import { useIntersectionObserver } from '@vueuse/core';
+import { useRoute, useRouter } from 'vue-router';
+import SlideshowCard from './SlideshowCard.vue';
+import { isNewArrival, getOptimizedImageUrl, formatProductName, getProductImage, parseCatalogSpecs, getCleanProductName } from '../../utils/formatters';
+import { extractColor } from '../../utils/colors';
+import { isKidsProduct } from '../../utils/kidsUtils';
+
+import { useAdmin } from '../../composables/useAdmin';
+import { useStockData } from '../../composables/useStockData';
+import { useCart } from '../../composables/useCart';
+
+import { useAppStore } from '../../stores/appStore';
+import { useCartStore } from '../../stores/cartStore';
+import { storeToRefs } from 'pinia';
+
+const CachedImage = defineAsyncComponent(() => import('./CachedImage.vue'));
+const ParagonCoreCard = defineAsyncComponent(() => import('./ParagonCoreCard.vue'));
+const CatalogHeroCarousel = defineAsyncComponent(() => import('./CatalogHeroCarousel.vue'));
+const CommitPreviewModal = defineAsyncComponent(() => import('./CommitPreviewModal.vue'));
+
+const baseUrl = import.meta.env.BASE_URL || '/';
+
+const route = useRoute();
+const router = useRouter();
+
+const appStore = useAppStore();
+const cartStore = useCartStore();
+const { cleanView, searchQuery, lastSyncTime } = storeToRefs(appStore);
+const { cartTotalItems } = storeToRefs(cartStore);
+
+const { isAdmin, isSuperAdmin } = useAdmin();
+const { stockData, loading: isSyncing, updateStockData, uploading, uploadImage, deleteImage, pendingUploads } = useStockData();
+const { addToCart, updateCart, getCartQty } = useCart();
+const showCommitPreviewModal = ref(false);
+
+const toggleNormalCleanView = () => {
+  if (cleanView.value === 'clean' || cleanView.value === true) {
+    appStore.setCleanView('all');
+  } else {
+    appStore.setCleanView('clean');
+  }
+};
+
+// Ensure non-admins are never stuck in upload mode
+watch([isAdmin, isSuperAdmin], ([admin, superAdmin]) => {
+  if (!admin && !superAdmin && cleanView.value === 'upload') {
+    appStore.setCleanView('clean');
+  }
+}, { immediate: true });
+
+const localPreviews = ref({});
+
+const stagedUploadsMap = computed(() => {
+  const map = new Map();
+  if (!pendingUploads.value) return map;
+  for (const item of pendingUploads.value) {
+    if (item.productName) {
+      const norm = item.productName.trim().toLowerCase();
+      if (item.status === 'deleted' || item.imageUrl === null) {
+        map.set(norm, null);
+      } else if (item.imageUrl) {
+        map.set(norm, item.imageUrl);
+      }
+    }
+  }
+  return map;
+});
+
+const isProductStaged = (productOrName) => {
+  const name = (typeof productOrName === 'object' ? productOrName?.productName : productOrName || '').trim().toLowerCase();
+  return Boolean(stagedUploadsMap.value.get(name) || localPreviews.value[name]);
+};
+
+const getProductCardImage = (product) => {
+  if (!product) return null;
+  const name = (product.productName || '').trim().toLowerCase();
+  if (localPreviews.value[name]) {
+    return localPreviews.value[name];
+  }
+  if (stagedUploadsMap.value.has(name)) {
+    return stagedUploadsMap.value.get(name);
+  }
+  return getProductImage(product);
+};
+
+const triggerCardPhotoUpload = (product) => {
+  if (!product) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const norm = (product.productName || '').trim().toLowerCase();
+      // Zero-latency instant local preview
+      const localPreviewUrl = URL.createObjectURL(file);
+      localPreviews.value = { ...localPreviews.value, [norm]: localPreviewUrl };
+      product.imageUrl = localPreviewUrl;
+      product.secondaryImageUrl = localPreviewUrl;
+
+      const newUrl = await uploadImage(product, file);
+      if (newUrl) {
+        product.imageUrl = newUrl;
+        product.secondaryImageUrl = newUrl;
+        product.imageUploadedAt = new Date().toISOString();
+        const updated = { ...localPreviews.value };
+        delete updated[norm];
+        localPreviews.value = updated;
+      }
+    }
+  };
+  input.click();
+};
+
+const handleCardDeletePhoto = async (product) => {
+  if (!product) return;
+  const norm = (product.productName || '').trim().toLowerCase();
+  const updated = { ...localPreviews.value };
+  delete updated[norm];
+  localPreviews.value = updated;
+  const success = await deleteImage(product);
+  if (success) {
+    product.imageUrl = null;
+    product.secondaryImageUrl = null;
+    delete product.imageUploadedAt;
+  }
+};
+
+const emit = defineEmits(['select-category', 'open-image-popup', 'open-catalog-gen', 'open-cart', 'promptAdminLogin']);
+
+// UI States
+const activeTab = ref('All');
+const activeFilter = ref('all');
+const inStockOnly = ref(false);
+const maxPriceFilter = ref(null);
+const localQuery = ref(searchQuery.value || '');
+const showDropdown = ref(false);
+const searchContainerRef = ref(null);
+const selectedItem = ref(null);
+
+watch(() => route.query, (query) => {
+  if (query.brand) {
+    activeTab.value = query.brand;
+    searchQuery.value = '';
+    localQuery.value = '';
+    selectedItem.value = null;
+  } else if (query.club) {
+    activeTab.value = query.club;
+    searchQuery.value = '';
+    localQuery.value = '';
+    selectedItem.value = null;
+  } else if (query.q) {
+    searchQuery.value = query.q;
+    localQuery.value = query.q;
+    selectedItem.value = null;
+  }
+}, { immediate: true });
+
+watch(() => searchQuery.value, (newVal) => {
+  if (!newVal) {
+    localQuery.value = '';
+    selectedItem.value = null;
+  } else if (localQuery.value !== newVal) {
+    localQuery.value = newVal;
+  }
+});
+
+const handleSync = async () => {
+  if (updateStockData) {
+    await updateStockData();
+  }
+};
+
+const formattedLastSync = computed(() => {
+  if (!lastSyncTime.value) return '';
+  const d = new Date(lastSyncTime.value);
+  if (isNaN(d.getTime())) return '';
+  return `Synced ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+});
+
+// Auto-Scroll JS Engine for Native Swiping Freedom
+const scrollers = ref(new Map());
+const activeScrolls = ref(new Set());
+let animationFrameId;
+let lastTime = 0;
+
+const setScroller = (id, el, direction = 1) => {
+  if (el) {
+    scrollers.value.set(id, { el, direction });
+  } else {
+    scrollers.value.delete(id);
+  }
+};
+
+const pauseScroll = (id) => activeScrolls.value.add(id);
+const resumeScroll = (id) => activeScrolls.value.delete(id);
+
+const loopScroll = (time) => {
+  if (!lastTime) lastTime = time;
+  const delta = time - lastTime;
+  lastTime = time;
+
+  for (const [id, data] of scrollers.value.entries()) {
+    if (activeScrolls.value.has(id)) continue;
+    const { el, direction } = data;
+    el.scrollLeft += (delta * 0.02 * direction);
+
+    if (direction === 1) {
+      if (el.scrollLeft >= el.scrollWidth / 2) {
+        el.scrollLeft -= el.scrollWidth / 2;
+      }
+    } else {
+      if (el.scrollLeft <= 0) {
+        el.scrollLeft += el.scrollWidth / 2;
+      }
+    }
+  }
+
+  animationFrameId = requestAnimationFrame(loopScroll);
+};
+
+onMounted(() => {
+  animationFrameId = requestAnimationFrame(loopScroll);
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  if (animationFrameId) cancelAnimationFrame(animationFrameId);
+  document.removeEventListener('click', handleClickOutside);
+});
+
+const handleClickOutside = (e) => {
+  if (searchContainerRef.value && !searchContainerRef.value.contains(e.target)) {
+    showDropdown.value = false;
+  }
+};
+
+// Search Dropdown Autocomplete
+const searchSuggestions = computed(() => {
+  if (!localQuery.value || localQuery.value.trim().length < 2) return [];
+  const q = localQuery.value.toLowerCase().trim();
+  const parts = q.split(/\s+/).filter(Boolean);
+  const matches = [];
+  const seen = new Set();
+
+  if (stockData.value) {
+    for (const group of stockData.value) {
+      if (group.products) {
+        for (const p of group.products) {
+          if (p.productName && !seen.has(p.productName)) {
+            const pName = p.productName.toLowerCase();
+            if (parts.every(part => pName.includes(part))) {
+              seen.add(p.productName);
+              matches.push(p);
+              if (matches.length >= 8) return matches;
+            }
+          }
+        }
+      }
+    }
+  }
+  return matches;
+});
+
+const handleSearchSubmit = (q) => {
+  showDropdown.value = false;
+  selectedItem.value = null; // Clear single-item selection to show all matching results
+  const val = (q || localQuery.value || '').trim();
+  searchQuery.value = val;
+  localQuery.value = val;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const handleProductSelect = (product) => {
+  if (!product) return;
+  showDropdown.value = false;
+  emit('open-image-popup', product);
+  clearSearch();
+};
+
+const handleProductClickFromSearch = (product) => {
+  if (!product) return;
+  emit('open-image-popup', product);
+  clearSearch();
+};
+
+const clearSearch = () => {
+  selectedItem.value = null;
+  searchQuery.value = '';
+  localQuery.value = '';
+  showDropdown.value = false;
+};
+
+const isSearchActive = computed(() => {
+  return Boolean(searchQuery.value && searchQuery.value.trim().length > 0) || Boolean(selectedItem.value);
+});
+
+const searchResults = computed(() => {
+  if (!searchQuery.value || !stockData.value) return [];
+  const q = searchQuery.value.toLowerCase().trim();
+  const parts = q.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return [];
+
+  const list = [];
+  const seen = new Set();
+
+  for (const group of stockData.value) {
+    if (group.products) {
+      for (const p of group.products) {
+        if (p.productName && !seen.has(p.productName)) {
+          const pName = p.productName.toLowerCase();
+          if (parts.every(part => pName.includes(part))) {
+            seen.add(p.productName);
+            list.push(p);
+          }
+        }
+      }
+    }
+  }
+
+  // Filter with In Stock Only (if explicitly toggled) & Max Price
+  return list.filter(p => {
+    if (inStockOnly.value && Number(p.quantity) <= 0) return false;
+    if (maxPriceFilter.value) {
+      const price = parseFloat(getPriceInfo(p.productName).price);
+      if (!isNaN(price) && price > maxPriceFilter.value) return false;
+    }
+    return true;
+  });
+});
+
+const otherSearchResults = computed(() => {
+  if (!selectedItem.value) return searchResults.value;
+  return searchResults.value.filter(p => p.productName !== selectedItem.value.productName);
+});
+
+// Brand Tabs Data (Full-Rounded Pill Badges) — Real PNG Logos Only
+const failedLogos = ref(new Set());
+const ParagonLogo = `${baseUrl}assets/logos/paragon-transparent-logo.png`;
+const ActionLogo = `${baseUrl}assets/logos/action-pill-logo.png`;
+const EekenLogo = `${baseUrl}assets/logos/eeken-logo.png`;
+const AjantaLogo = `${baseUrl}assets/logos/ajanta-pill-logo.png`;
+const ParaliteLogo = `${baseUrl}assets/logos/paralite-logo.png`;
+const SoleaLogo = `${baseUrl}assets/logos/solea-logo.png`;
+const VertexLogo = `${baseUrl}assets/logos/vertex-logo.png`;
+const MaxLogo = `${baseUrl}assets/logos/max-logo.png`;
+const ComfyLogo = `${baseUrl}assets/logos/comfy-logo.png`;
+const PtoesLogo = `${baseUrl}assets/logos/ptoes-pill-logo.png`;
+const TuffbootLogo = `${baseUrl}assets/logos/tuffboot-logo.png`;
+const GumbootLogo = `${baseUrl}assets/logos/gumboot-logo.png`;
+const CubixLogo = `${baseUrl}assets/logos/cubix-pill-logo.png`;
+const FlorexLogo = `${baseUrl}assets/logos/florex-pill-logo.png`;
+const RelianceLogo = `${baseUrl}assets/logos/reliance-logo.png`;
+const EscouteLogo = `${baseUrl}assets/logos/escoute-logo.png`;
+const SchoolLogo = `${baseUrl}assets/logos/paragon-school-logo.png`;
+const StimulusLogo = `${baseUrl}assets/logos/stimulus-logo.png`;
+const WalkaholicLogo = `${baseUrl}assets/logos/walkaholic-logo.png`;
+const FenderLogo = `${baseUrl}assets/logos/fender-logo.png`;
+const MerivaLogo = `${baseUrl}assets/logos/meriva-logo.png`;
+const TeuzLogo = `${baseUrl}assets/logos/teuz-logo.png`;
+const ParisLogo = `${baseUrl}assets/logos/paris-logo.jpg`;
+const TaraLogo = `${baseUrl}assets/logos/tara-logo.png`;
+const BrockkieLogo = `${baseUrl}assets/logos/brockkie-logo.png`;
+const XpaniaLogo = `${baseUrl}assets/logos/xpania-logo.png`;
+
+const hasProductImage = (p) => Boolean(p && getProductImage(p));
+
+const looseGroupNames = [
+  'ASHU', 'PANKAJ PLASTIC', 'TARA', 'J.K Plastic', 'MAGNET', 'MARUTI PLASTICS',
+  'AAGAM POLYMER', 'AAGAM POLYMERE', 'A G ENTERPRISES', 'NAV DURGA ENTERPRISES', 'NEXUS', 'R K TRADERS',
+  'SRG ENTERPRISES', 'VARDHMAN PLASTICS', 'YASH FOOTWEAR', 'KRISHNA AGENCY', 'SHYAM',
+  'AVTAR V V POLYMERS', 'ATHARV PLASTIC', 'SALASAR BALAJI', 'Balaji', 'NON BRAND',
+  'Shree Shyam Ind', 'PU-LION', 'S S BANSAL', 'ARIHANT', 'ARHINAT', 'NAV DURGA RAIPUR'
+];
+
+const boxGroupNames = [
+  'Mini F/w', 'ADDA', 'ADDOXY', 'AIRFAX', 'HITWAY', 'PARIS', 'TEUZ', 'VAISHNO PLASTIC',
+  'AGRA', 'R R POLYPLAST', 'AIRSON', 'AMBIKA FOOTWEAR', 'GOKUL FOOTWEAR', 'NEXGEN FOOTWEAR',
+  'Kohinoor', 'UAM FOOTWEAR', 'BROCKKIE', 'Barun', 'VENUS', 'LEO', 'BRIZ FOOTWEAR',
+  'Brij Footwear', 'Ruban F/w', 'SOLA', 'ZYF TEX', 'ORTHO', 'UXO', 'NX KIDS SANDEL', 'GLAMIUM',
+  'Avon International (WOODS)', 'KHADIM', '4WAY SPORT', 'Durolite'
+];
+
+const brandTabs = [
+  // 1. All
+  { id: 'All', label: 'All Products', icon: 'fa-solid fa-border-all', iconColor: 'text-[#c59b27]' },
+  // 2. New
+  { id: 'NewArrivals', label: 'New', icon: 'fa-solid fa-wand-magic-sparkles', iconColor: 'text-amber-500' },
+  // 3. Paragon Gents (Superimposed pill-in-pill + "Gents" text extender)
+  { id: 'PARAGON GENTS', label: 'Paragon Gents', image: ParagonLogo, subLabel: 'Gents', superimposed: true },
+  // 4. Paragon Ladies (Superimposed pill-in-pill + "Ladies" text extender)
+  { id: 'PARAGON LADIES', label: 'Paragon Ladies', image: ParagonLogo, subLabel: 'Ladies', superimposed: true },
+  // 5. Kids (Small sizes: 16x20, 15x20, 21x26, 11x13, 9x11, 2x5, 4x5, etc. across all brands)
+  { id: 'Kids', label: 'Kids', icon: 'fa-solid fa-child-reaching', iconColor: 'text-amber-500' },
+  // 6. Paralite (End-to-end pill logo)
+  { id: 'PARALITE', label: 'Paralite', image: ParaliteLogo, fillLogo: true },
+  // 6. Solea
+  { id: 'Solea', label: 'Solea', image: SoleaLogo, fillLogo: true },
+  // 7. Eeken
+  { id: 'EEKEN', label: 'Eeken', image: EekenLogo, fillLogo: true },
+  // 8. Max
+  { id: 'Max', label: 'Max', image: MaxLogo, fillLogo: true },
+  // 9. Comfy
+  { id: 'Comfy', label: 'Comfy', image: ComfyLogo, fillLogo: true },
+  // 10. P-Toes
+  { id: 'P-TOES', label: 'P-Toes', image: PtoesLogo, fillLogo: true },
+  // 11. Tuffboot
+  { id: 'Tuffboot', label: 'Tuffboot', image: TuffbootLogo, fillLogo: true },
+  // 12. Gumboot
+  { id: 'Gumboot', label: 'Gumboot', image: GumbootLogo, fillLogo: true },
+  // 13. Action
+  { id: 'ACTION', label: 'Action', image: ActionLogo, fillLogo: true },
+  // 14. Cubix
+  { id: 'Cubix', label: 'Cubix', image: CubixLogo, fillLogo: true },
+  // 15. Florex
+  { id: 'Florex', label: 'Florex', image: FlorexLogo, fillLogo: true },
+  // 16. Ajanta
+  { id: 'AJANTA', label: 'Ajanta', image: AjantaLogo, fillLogo: true },
+  // 17. Reliance
+  { id: 'Reliance', label: 'Reliance', image: RelianceLogo, fillLogo: true },
+  // 18. Escoute
+  { id: 'Escoute', label: 'Escoute', image: EscouteLogo, fillLogo: true },
+  // 19. School Shoes
+  { id: 'School', label: 'School', image: SchoolLogo, fillLogo: true },
+  // 20. Stimulus
+  { id: 'Stimulus', label: 'Stimulus', image: StimulusLogo, fillLogo: true },
+  // 21. Walkaholic
+  { id: 'Walkaholic', label: 'Walkaholic', image: WalkaholicLogo, fillLogo: true },
+  // 22. Fender
+  { id: 'Fender', label: 'Fender', image: FenderLogo, fillLogo: true },
+  // 23. Meriva
+  { id: 'Meriva', label: 'Meriva', image: MerivaLogo, fillLogo: true },
+  // 24. Vertex
+  { id: 'Vertex', label: 'Vertex', image: VertexLogo, fillLogo: true },
+  // 25. Teuz
+  { id: 'TEUZ', label: 'Teuz', image: TeuzLogo, fillLogo: true },
+  // 26. Paris
+  { id: 'PARIS', label: 'Paris', image: ParisLogo, fillLogo: true },
+  // 27. Brockkie
+  { id: 'BROCKKIE', label: 'Brockkie', image: BrockkieLogo, fillLogo: true },
+  // 28. Xpania
+  { id: 'XPANIA', label: 'Xpania', image: XpaniaLogo, fillLogo: true },
+  // 29. Tara
+  { id: 'TARA', label: 'Tara', image: TaraLogo, fillLogo: true },
+  // 30. Box Packing
+  { id: 'BoxPacking', label: 'Box Packing', icon: 'fa-solid fa-box', iconColor: 'text-blue-500' },
+  // 31. Loose Packing
+  { id: 'LoosePacking', label: 'Loose Packing', icon: 'fa-solid fa-bag-shopping', iconColor: 'text-purple-500' },
+  // 32. 40% Off
+  { id: 'ParagonDiscount', label: '40% Off', icon: 'fa-solid fa-tags', iconColor: 'text-red-500' },
+];
+
+const getCatalogSpecs = (product) => {
+  if (!product) return { article: '', size: '', mrp: '', color: null, sole: '' };
+  const grp = productToGroupMap.value?.get(product.productName) || product.groupName || '';
+  return parseCatalogSpecs(product.productName, grp);
+};
+
+const selectTab = (tabId) => {
+  activeTab.value = tabId;
+  selectedItem.value = null;
+  searchQuery.value = '';
+  localQuery.value = '';
+  showDropdown.value = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const toggleInStockFilter = () => {
+  inStockOnly.value = !inStockOnly.value;
+  cleanView.value = inStockOnly.value;
+};
+
+const handlePriceFilter = (price) => {
+  if (maxPriceFilter.value === price) {
+    maxPriceFilter.value = null;
+  } else {
+    maxPriceFilter.value = price;
+  }
+};
+
+// Helper Functions
+const getPriceInfo = (name) => {
+  if (!name) return { label: 'Net Rate', price: '?' };
+  const match = name.match(/((?:RS|MRP|@))[\.\s]*(\d+(\.\d+)?)/i);
+  if (match) {
+    const prefix = match[1].toUpperCase();
+    return { label: prefix === 'MRP' ? 'MRP' : 'Net Rate', price: match[2] };
+  }
+  const fallback = name.match(/(\d+(\.\d+)?)(?!.*\d)/);
+  return { label: 'Net Rate', price: fallback ? fallback[0] : '?' };
+};
+
+const getProductSize = (name) => {
+  if (!name) return null;
+  const match = name.match(/(?:^|[\s\(])(\d{1,2})\s*[xX*]\s*(\d{1,2})(?:[\s\)]|$)/);
+  if (match) {
+    const n1 = parseInt(match[1]);
+    const n2 = parseInt(match[2]);
+    return `${Math.min(n1, n2)}x${Math.max(n1, n2)}`;
+  }
+  return null;
+};
+
+const getProductColor = (name) => extractColor(name);
+
+// Data Collection Functions
+const uploadModeProducts = computed(() => {
+  if (!stockData.value) return [];
+  const list = [];
+  const stagedSet = new Set([
+    ...(pendingUploads.value || [])
+      .filter(u => u.imageUrl && u.status !== 'deleted')
+      .map(u => (u.productName || '').trim().toLowerCase()),
+    ...Object.keys(localPreviews.value)
+  ]);
+
+  for (const group of stockData.value) {
+    if (group.groupName === '_META_DATA_' || !group.products) continue;
+    for (const p of group.products) {
+      const norm = (p.productName || '').trim().toLowerCase();
+      const isStaged = stagedSet.has(norm);
+      const hasImg = hasProductImage(p);
+      if ((!hasImg || isStaged) && Number(p.quantity) > 0) {
+        list.push({ 
+          ...p, 
+          groupName: p.groupName || group.groupName,
+          imageUrl: getProductCardImage(p)
+        });
+      }
+    }
+  }
+  return list.sort((a, b) => {
+    const aNorm = (a.productName || '').trim().toLowerCase();
+    const bNorm = (b.productName || '').trim().toLowerCase();
+    const aStaged = stagedSet.has(aNorm);
+    const bStaged = stagedSet.has(bNorm);
+    if (aStaged && !bStaged) return -1;
+    if (!aStaged && bStaged) return 1;
+
+    const dateA = new Date(a.lastPurchasedAt || a.firstSeenAt || a.imageUploadedAt || 0).getTime();
+    const dateB = new Date(b.lastPurchasedAt || b.firstSeenAt || b.imageUploadedAt || 0).getTime();
+    return dateB - dateA || (Number(b.quantity) || 0) - (Number(a.quantity) || 0);
+  });
+});
+
+const formatProductRecencyDate = (p) => {
+  const d = p.lastPurchasedAt || p.firstSeenAt || p.imageUploadedAt;
+  if (!d) return null;
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return null;
+  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const getNewArrivalProducts = () => {
+  let products = [];
+  if (!stockData.value) return products;
+  for (const group of stockData.value) {
+    if (group.products) {
+      for (const p of group.products) {
+        if (cleanView.value === 'clean' || cleanView.value === true) {
+          if (!hasProductImage(p) || Number(p.quantity) < 4) continue;
+        } else if (cleanView.value === 'upload') {
+          if (hasProductImage(p) || Number(p.quantity) <= 0) continue;
+        }
+        if (isNewArrival(p)) products.push(p);
+      }
+    }
+  }
+  return products.sort((a,b) => {
+    const dateA = new Date(a.lastPurchasedAt || a.firstSeenAt || a.imageUploadedAt || 0);
+    const dateB = new Date(b.lastPurchasedAt || b.firstSeenAt || b.imageUploadedAt || 0);
+    return dateB - dateA;
+  });
+};
+
+const getNewArrivalCount = () => {
+  return consolidateProducts(getNewArrivalProducts()).length;
+};
+
+const getHeroImage = () => {
+  const list = getNewArrivalProducts();
+  const itemWithImage = list.find(p => getProductImage(p));
+  return itemWithImage ? getProductImage(itemWithImage) : null;
+};
+
+const getBrandProducts = (groupNames) => {
+  let products = [];
+  if (!stockData.value || !groupNames) return products;
+  const lower = groupNames.map(n => n.toLowerCase());
+  for (const group of stockData.value) {
+    if (lower.includes(group.groupName.toLowerCase()) && group.products) {
+      for (const p of group.products) {
+        products.push(p);
+      }
+    }
+  }
+  return products;
+};
+
+const getAllKidsProducts = () => {
+  let products = [];
+  if (!stockData.value) return products;
+  for (const group of stockData.value) {
+    if (group.groupName === '_META_DATA_' || !group.products) continue;
+    for (const p of group.products) {
+      if (isKidsProduct(p.productName, group.groupName)) {
+        products.push(p);
+      }
+    }
+  }
+  return products;
+};
+
+// Dynamic Category Products for Selected Bubble
+const getActiveTabProducts = () => {
+  if (activeTab.value === 'All') return [];
+  if (!stockData.value) return [];
+
+  let products = [];
+  const tab = activeTab.value;
+
+  if (tab === 'BrowseAll') {
+    for (const group of stockData.value) {
+      if (group.groupName === '_META_DATA_' || !group.products) continue;
+      for (const p of group.products) {
+        if (cleanView.value === 'clean' || cleanView.value === true) {
+          if (!hasProductImage(p) || Number(p.quantity) < 4) continue;
+        } else if (cleanView.value === 'upload') {
+          if (hasProductImage(p) || Number(p.quantity) <= 0) continue;
+        }
+        products.push(p);
+      }
+    }
+  } else if (tab === 'NewArrivals') {
+    products = getNewArrivalProducts();
+  } else if (tab === 'ParagonDiscount') {
+    products = getBrandProducts(['PARAGON GENTS 40%', 'SOLEA DISC 40% OFFER']);
+  } else if (tab === 'BoxPacking') {
+    products = getBrandProducts(boxGroupNames);
+  } else if (tab === 'LoosePacking') {
+    products = getBrandProducts(looseGroupNames);
+  } else if (tab === 'ParagonCore') {
+    products = getBrandProducts(['PARAGON GENTS', 'PARAGON LADIES', 'PARALITE', 'P-TOES', 'Hawai Chappal']);
+  } else if (tab === 'PARAGON GENTS') {
+    products = getBrandProducts(['PARAGON GENTS', 'PARAGON GENTS 40%']);
+  } else if (tab === 'PARAGON LADIES') {
+    products = getBrandProducts(['PARAGON LADIES']);
+  } else if (tab === 'Kids') {
+    products = getAllKidsProducts();
+  } else if (tab === 'PARALITE') {
+    products = getBrandProducts(['PARALITE', 'PARALITE OLD', 'P-TOES PARALITE']);
+  } else if (tab === 'Solea') {
+    // Solea products live under PARAGON LADIES group
+    products = getBrandProducts(['PARAGON LADIES', 'SOLEA DISC 40% OFFER']);
+  } else if (tab === 'P-TOES') {
+    products = getBrandProducts(['P-TOES', 'P-TOES PARALITE']);
+  } else if (tab === 'Comfy') {
+    // Comfy is a sub-brand within PARAGON GENTS
+    const all = getBrandProducts(['PARAGON GENTS']);
+    products = all.filter(p => /comfy/i.test(p.productName));
+  } else if (tab === 'Tuffboot') {
+    // Tuffboot products within Safety group
+    const all = getBrandProducts(['Safety']);
+    products = all.filter(p => /tuff\s*boot|tuffboot/i.test(p.productName));
+  } else if (tab === 'Gumboot') {
+    // Gumboot products within Safety group
+    const all = getBrandProducts(['Safety']);
+    products = all.filter(p => /gum\s*boot|gumboot|pvc.*boot/i.test(p.productName));
+  } else if (tab === 'Stimulus') {
+    products = getBrandProducts(['Stimulus']);
+  } else if (tab === 'Fender') {
+    products = getBrandProducts(['Fencer']);
+  } else if (tab === 'Meriva') {
+    // Meriva products live under PARAGON LADIES
+    const all = getBrandProducts(['PARAGON LADIES']);
+    products = all.filter(p => /meriva/i.test(p.productName));
+  } else if (tab === 'Vertex') {
+    // Vertex products live under PARAGON GENTS
+    const all = getBrandProducts(['PARAGON GENTS']);
+    products = all.filter(p => /vertex/i.test(p.productName));
+  } else if (tab === 'Max' || tab === 'MAX') {
+    // Paragon Max products: dedicated 'Max' group + Max products in PARAGON GENTS & PARAGON
+    const isMaxProduct = (name) => /\b(max|prg\s*max|pg\s*max|pargon\s*max)\b/i.test(name) || /paragon\s*max/i.test(name);
+    const maxGroup = getBrandProducts(['Max']);
+    const pgMax = getBrandProducts(['PARAGON GENTS', 'PARAGON']).filter(p => isMaxProduct(p.productName));
+    const seen = new Set();
+    products = [];
+    for (const p of [...maxGroup, ...pgMax]) {
+      if (!seen.has(p.productName)) {
+        seen.add(p.productName);
+        products.push(p);
+      }
+    }
+  } else if (tab === 'ACTION') {
+    products = getBrandProducts(['ACTION']);
+  } else if (tab === 'EEKEN') {
+    products = getBrandProducts(['EEKEN']);
+  } else if (tab === 'AJANTA') {
+    products = getBrandProducts(['AJANTA', 'AJANTA FOOTWEAR']);
+  } else if (tab === 'Cubix') {
+    products = getBrandProducts(['CUBIX', 'CUBIX 2']);
+  } else if (tab === 'Florex') {
+    products = getBrandProducts(['Florex (Swastik)']);
+  } else if (tab === 'Reliance') {
+    products = getBrandProducts(['RELIANCE FOOTWEAR']);
+  } else if (tab === 'School') {
+    products = getBrandProducts(['School', 'SCHOOL SHOE DUROLITE']);
+  } else if (tab === 'Walkaholic') {
+    products = getBrandProducts(['Walkaholic']);
+  } else if (tab === 'XPANIA' || tab === 'Xpania') {
+    products = getBrandProducts(['Xpania']);
+  } else {
+    products = getBrandProducts([tab]);
+  }
+
+  // Apply In Stock & Price Filters
+  return products.filter(p => {
+    if (cleanView.value === 'clean' || cleanView.value === true) {
+      if (!hasProductImage(p) || Number(p.quantity) < 4) return false;
+    } else if (cleanView.value === 'upload') {
+      if (hasProductImage(p) || Number(p.quantity) <= 0) return false;
+    }
+    if (inStockOnly.value && Number(p.quantity) <= 0) return false;
+    if (maxPriceFilter.value) {
+      const price = parseFloat(getPriceInfo(p.productName).price);
+      if (!isNaN(price) && price > maxPriceFilter.value) return false;
+    }
+    return true;
+  }).sort((a, b) => {
+    if (cleanView.value === 'upload') {
+      const dateA = new Date(a.lastPurchasedAt || a.firstSeenAt || a.imageUploadedAt || 0).getTime();
+      const dateB = new Date(b.lastPurchasedAt || b.firstSeenAt || b.imageUploadedAt || 0).getTime();
+      return dateB - dateA || (Number(b.quantity) || 0) - (Number(a.quantity) || 0);
+    }
+    return 0;
+  });
+};
+
+const filteredTabProducts = computed(() => getActiveTabProducts());
+
+const PARAGON_GROUPS = new Set([
+  'Hawai Chappal',
+  'Max',
+  'PARAGON',
+  'Paragon Blot',
+  'PARAGON COMFY',
+  'PARAGON GENTS',
+  'PARAGON GENTS 40%',
+  'PARAGON LADIES',
+  'PARALITE',
+  'PARALITE OLD',
+  'P-TOES',
+  'SOLEA DISC 40% OFFER'
+]);
+
+const productToGroupMap = computed(() => {
+  const map = new Map();
+  if (!stockData.value) return map;
+  for (const group of stockData.value) {
+    if (group.products) {
+      for (const p of group.products) {
+        if (p.productName) {
+          map.set(p.productName, group.groupName);
+        }
+      }
+    }
+  }
+  return map;
+});
+
+function isCopyDuplicate(groupName, productName) {
+  if (!groupName) return false;
+  if (!PARAGON_GROUPS.has(groupName)) return true;
+  if (/loose|polland|maruti|aagum|aagam|balaji|florex|eeken|action|cubix|swastik/i.test(productName)) return true;
+  if (/loose|polland|maruti|aagum|aagam|balaji|florex|eeken|action|cubix|swastik/i.test(groupName)) return true;
+  return false;
+}
+
+function isBoys(p, g) {
+  const name = (p.productName || '').toLowerCase();
+  const group = (g || '').toLowerCase();
+  if (group.includes('p-toes')) return true;
+  if (/p-?toes|boys?|kiddies|children/i.test(name)) return true;
+  if (/\b(1[\*x\-]3|4[\*x\-]5|9[\*x\-]13|2[\*x\-]5)\b/i.test(name)) return true;
+  return false;
+}
+
+const paragonCoreDefinitions = [
+  { id: '1136_gents', name: 'Paragon 1136 Gents', category: 'PU Daily Slippers', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143986/e-sbe/Core-1136.png', fallbackSrc: `${baseUrl}assets/core/Core-1136.png`, match: (p, g) => /\b1136\b/.test(p.productName) && !isBoys(p, g) },
+  { id: '1136_boys', name: 'P-Toes 1136 Boys', category: 'Boys Footwear', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143986/e-sbe/Core-1136.png', fallbackSrc: `${baseUrl}assets/core/Core-1136.png`, match: (p, g) => /\b1136\b/.test(p.productName) && isBoys(p, g) },
+  { id: '1170', name: 'Paragon 1170 Ladies', category: 'Ladies PU Slippers', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143986/e-sbe/Core-1170.png', fallbackSrc: `${baseUrl}assets/core/Core-1170.png`, match: (p, g) => /\b1170\b/.test(p.productName) },
+  { id: '1180_gents', name: 'Paralite 1180 Gents', category: 'Men PU Comfort', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143986/e-sbe/Core-1180.png', fallbackSrc: `${baseUrl}assets/core/Core-1180.png`, match: (p, g) => /\b1180\b/.test(p.productName) && !isBoys(p, g) },
+  { id: '1180_boys', name: 'P-Toes 1180 Boys', category: 'Boys & Junior Footwear', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143986/e-sbe/Core-1180.png', fallbackSrc: `${baseUrl}assets/core/Core-1180.png`, match: (p, g) => /\b1180\b/.test(p.productName) && isBoys(p, g) },
+  { id: '1181', name: 'Paralite 1181 Gents', category: 'Men PU Comfort', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143988/e-sbe/Core-1181.png', fallbackSrc: `${baseUrl}assets/core/Core-1181.png`, match: (p, g) => /\b1181\b/.test(p.productName) },
+  { id: '1190_gents', name: 'Paralite 1190 Gents', category: 'Lightweight Daily Slipper', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143988/e-sbe/Core-1190.png', fallbackSrc: `${baseUrl}assets/core/Core-1190.png`, match: (p, g) => /\b1190\b/.test(p.productName) && !isBoys(p, g) },
+  { id: '1190_boys', name: 'P-Toes 1190 Boys', category: 'Boys & Junior Footwear', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143988/e-sbe/Core-1190.png', fallbackSrc: `${baseUrl}assets/core/Core-1190.png`, match: (p, g) => /\b1190\b/.test(p.productName) && isBoys(p, g) },
+  { id: '1210_gents', name: 'Paragon 1210 Gents', category: 'Everyday Comfort PU', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1210.png', fallbackSrc: `${baseUrl}assets/core/Core-1210.png`, match: (p, g) => /\b1210\b/.test(p.productName) && !isBoys(p, g) },
+  { id: '1210_boys', name: 'P-Toes 1210 Boys', category: 'Boys & Junior Footwear', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1210.png', fallbackSrc: `${baseUrl}assets/core/Core-1210.png`, match: (p, g) => /\b1210\b/.test(p.productName) && isBoys(p, g) },
+  { id: '1215', name: 'Paragon 1215 Ladies', category: 'Women Daily PU Comfort', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1215.png', fallbackSrc: `${baseUrl}assets/core/Core-1215.png`, match: (p, g) => /\b1215\b/.test(p.productName) },
+  { id: '1220', name: 'Paragon 1220 Ladies', category: 'Women Daily PU Comfort', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143990/e-sbe/Core-1220.png', fallbackSrc: `${baseUrl}assets/core/Core-1220.png`, match: (p, g) => /\b1220\b/.test(p.productName) },
+  { id: '1250_bkr', name: 'Paragon 1250 BKR', category: 'Men Classic Black-Red', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1250-BKR.png', fallbackSrc: `${baseUrl}assets/core/Core-1250-BKR.png`, match: (p, g) => /\b1250\b/.test(p.productName) && (!p.productName.toUpperCase().includes('TQN')) },
+  { id: '1250_tqn', name: 'Paragon 1250 TQN', category: 'Men Turquoise-Navy', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143991/e-sbe/Core-1250-TQN.png', fallbackSrc: `${baseUrl}assets/core/Core-1250-TQN.png`, match: (p, g) => /\b1250\b/.test(p.productName) && p.productName.toUpperCase().includes('TQN') },
+  { id: '1251_bkr', name: 'Paragon 1251 BKR', category: 'Men Classic Black-Red', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143991/e-sbe/Core-1251-BKR.png', fallbackSrc: `${baseUrl}assets/core/Core-1251-BKR.png`, match: (p, g) => /\b1251\b/.test(p.productName) },
+  { id: '16048_blk', name: 'Paralite 16048 BLK', category: 'Men Light PU Black', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143992/e-sbe/Core-16048-BLK.png', fallbackSrc: `${baseUrl}assets/core/Core-16048-BLK.png`, match: (p, g) => /\b16048\b/.test(p.productName) && !isBoys(p, g) && (!p.productName.toUpperCase().includes('MIG')) },
+  { id: '16048_mig', name: 'Paralite 16048 MIG', category: 'Men Light PU Mint-Grey', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143992/e-sbe/Core-16048-MIG.png', fallbackSrc: `${baseUrl}assets/core/Core-16048-MIG.png`, match: (p, g) => /\b16048\b/.test(p.productName) && !isBoys(p, g) && p.productName.toUpperCase().includes('MIG') },
+  { id: '16048_boys', name: 'P-Toes 16048 Boys', category: 'Boys Footwear', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143992/e-sbe/Core-16048-BLK.png', fallbackSrc: `${baseUrl}assets/core/Core-16048-BLK.png`, match: (p, g) => /\b16048\b/.test(p.productName) && isBoys(p, g) },
+  { id: '16049_blk', name: 'Paralite 16049 BLK', category: 'Men Light PU Black', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143993/e-sbe/Core-16049-BLK.png', fallbackSrc: `${baseUrl}assets/core/Core-16049-BLK.png`, match: (p, g) => /\b16049\b/.test(p.productName) && !isBoys(p, g) && (!p.productName.toUpperCase().includes('RYB')) },
+  { id: '16049_ryb', name: 'Paralite 16049 RYB', category: 'Men Light PU Royal Blue', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143993/e-sbe/Core-16049-RYB.png', fallbackSrc: `${baseUrl}assets/core/Core-16049-RYB.png`, match: (p, g) => /\b16049\b/.test(p.productName) && !isBoys(p, g) && p.productName.toUpperCase().includes('RYB') },
+  { id: '16049_boys', name: 'P-Toes 16049 Boys', category: 'Boys Footwear', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143993/e-sbe/Core-16049-BLK.png', fallbackSrc: `${baseUrl}assets/core/Core-16049-BLK.png`, match: (p, g) => /\b16049\b/.test(p.productName) && isBoys(p, g) },
+  { id: 'cushion', name: 'Paragon Cushion Hawai', category: 'Classic Daily Hawai', img: 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143994/e-sbe/Core-cushion.png', fallbackSrc: `${baseUrl}assets/core/Core-cushion.png`, match: (p, g) => /cushion/i.test(p.productName) && !/1136|1210/.test(p.productName) }
+];
+
+function standardizeCoreSize(name) {
+  const m = name.match(/\(\s*(\d+\s*[\*xX\-]\s*\d+)\s*\)/i) ||
+            name.match(/\b(\d+\s*[\*xX\-]\s*\d+)\b/i) ||
+            name.match(/\b(\d+)\s*no\b/i);
+  if (m) {
+    let s = m[1].replace(/\s+/g, '').replace(/[\*\-X]/g, 'x');
+    if (s.startsWith('0')) s = s.substring(1);
+    if (s === '6x09') s = '6x9';
+    return s;
+  }
+  return 'Standard';
+}
+
+function parseCorePrice(name) {
+  const m = name.match(/mrp\s*[:\.]?\s*(\d+(\.\d+)?)/i) || 
+            name.match(/rs\s*[:\.]?\s*(\d+(\.\d+)?)/i) || 
+            name.match(/@\s*(\d+(\.\d+)?)/i);
+  return m ? parseFloat(m[1]) : 0;
+}
+
+function buildCoreObject(def, matchedProducts) {
+  const sizeGroups = {};
+  matchedProducts.forEach(p => {
+    const size = standardizeCoreSize(p.productName);
+    const price = parseCorePrice(p.productName);
+    if (!sizeGroups[size]) {
+      sizeGroups[size] = {
+        size,
+        totalQty: 0,
+        price: price || 0,
+        primaryProduct: p,
+        products: []
+      };
+    }
+    sizeGroups[size].totalQty += (Number(p.quantity) || 0);
+    sizeGroups[size].products.push(p);
+    if (Number(p.quantity) > 0 && (!sizeGroups[size].primaryProduct || Number(sizeGroups[size].primaryProduct.quantity) <= 0)) {
+      sizeGroups[size].primaryProduct = p;
+      if (price > 0) sizeGroups[size].price = price;
+    }
+  });
+
+  let sizes = Object.values(sizeGroups).sort((a,b) => b.totalQty - a.totalQty);
+  if (inStockOnly.value) {
+    sizes = sizes.filter(s => s.totalQty > 0);
+  }
+  if (maxPriceFilter.value) {
+    sizes = sizes.filter(s => s.price === 0 || s.price <= maxPriceFilter.value);
+  }
+
+  const totalStock = sizes.reduce((sum, s) => sum + s.totalQty, 0);
+  const img = def.img || matchedProducts.find(p => p.imageUrl)?.imageUrl || null;
+  const fallbackSrc = def.fallbackSrc || matchedProducts.find(p => p.secondaryImageUrl)?.secondaryImageUrl || null;
+
+  return {
+    ...def,
+    img,
+    fallbackSrc,
+    totalStock,
+    sizes
+  };
+}
+
+const paragonCoreList = computed(() => {
+  if (!stockData.value) return [];
+
+  return paragonCoreDefinitions.map(def => {
+    const matched = [];
+    stockData.value.forEach(g => {
+      if (isCopyDuplicate(g.groupName, '')) return;
+      if (g.products) {
+        g.products.forEach(p => {
+          if (isCopyDuplicate(g.groupName, p.productName)) return;
+          if (def.match(p, g.groupName)) {
+            matched.push(p);
+          }
+        });
+      }
+    });
+
+    return buildCoreObject(def, matched);
+  }).filter(core => {
+    if ((cleanView.value === 'clean' || cleanView.value === true) && core.totalStock <= 0) return false;
+    if (inStockOnly.value && core.totalStock <= 0) return false;
+    return true;
+  });
+});
+
+function consolidateProducts(products) {
+  if (!products || products.length === 0) return [];
+  const coreMap = new Map();
+  const items = [];
+
+  for (const p of products) {
+    const groupName = productToGroupMap.value.get(p.productName) || p.groupName || '';
+    if (isCopyDuplicate(groupName, p.productName)) {
+      items.push({ isCore: false, ...p });
+      continue;
+    }
+
+    const matchedDef = paragonCoreDefinitions.find(def => def.match(p, groupName));
+    if (matchedDef) {
+      if (!coreMap.has(matchedDef.id)) {
+        const placeholder = { isCore: true, id: 'core_' + matchedDef.id, def: matchedDef, matched: [p] };
+        coreMap.set(matchedDef.id, placeholder);
+        items.push(placeholder);
+      } else {
+        coreMap.get(matchedDef.id).matched.push(p);
+      }
+    } else {
+      items.push({ isCore: false, ...p });
+    }
+  }
+
+  return items.map(it => {
+    if (it.isCore && it.def) {
+      const coreObj = buildCoreObject(it.def, it.matched);
+      return { isCore: true, id: it.id, core: coreObj };
+    }
+    return it;
+  }).filter(it => {
+    if (it.isCore) {
+      if ((cleanView.value === 'clean' || cleanView.value === true) && it.core.totalStock <= 0) return false;
+      if (inStockOnly.value && it.core.totalStock <= 0) return false;
+    }
+    return true;
+  });
+}
+
+const displayedTabProducts = computed(() => {
+  if (activeTab.value === 'ParagonCore') {
+    return paragonCoreList.value.map(core => ({ isCore: true, id: 'core_' + core.id, core }));
+  }
+  return consolidateProducts(filteredTabProducts.value);
+});
+
+const displayedSearchResults = computed(() => {
+  return consolidateProducts(otherSearchResults.value);
+});
+
+// Progressive Rendering / Virtual Pagination (prevents mounting thousands of DOM nodes at once)
+const displayLimit = ref(40);
+const tabLoadMoreRef = ref(null);
+const searchLoadMoreRef = ref(null);
+
+const visibleTabProducts = computed(() => displayedTabProducts.value.slice(0, displayLimit.value));
+const visibleSearchResults = computed(() => displayedSearchResults.value.slice(0, displayLimit.value));
+
+const hasMoreTabProducts = computed(() => visibleTabProducts.value.length < displayedTabProducts.value.length);
+const hasMoreSearchResults = computed(() => visibleSearchResults.value.length < displayedSearchResults.value.length);
+
+const loadMore = () => {
+  displayLimit.value += 40;
+};
+
+useIntersectionObserver(tabLoadMoreRef, ([{ isIntersecting }]) => {
+  if (isIntersecting && hasMoreTabProducts.value) {
+    displayLimit.value += 40;
+  }
+}, { threshold: 0.1 });
+
+useIntersectionObserver(searchLoadMoreRef, ([{ isIntersecting }]) => {
+  if (isIntersecting && hasMoreSearchResults.value) {
+    displayLimit.value += 40;
+  }
+}, { threshold: 0.1 });
+
+// Reset display limit when switching tabs, searching, or toggling filters
+watch([activeTab, searchQuery, inStockOnly, maxPriceFilter, cleanView], () => {
+  displayLimit.value = 40;
+});
+
+const getActiveTabLabel = () => {
+  if (activeTab.value === 'BrowseAll') return 'All Products';
+  const found = brandTabs.find(t => t.id === activeTab.value);
+  return found ? found.label : activeTab.value;
+};
+
+const getParagonImages = (card) => {
+  return localCarousals[card.id] || [];
+};
+
+const getImages = (groupNames, limit=5) => {
+  return [];
+};
+
+const getCount = (groupNames) => {
+  if (!stockData.value || !groupNames) return 0;
+  let count = 0;
+  const lower = groupNames.map(n => n.toLowerCase());
+  stockData.value.forEach(g => {
+    if (lower.includes(g.groupName.toLowerCase())) {
+      count += g.products ? g.products.length : 0;
+    }
+  });
+  return count;
+};
+
+const localCarousals = {
+  'ParagonCore': [
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143986/e-sbe/Core-1136.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143986/e-sbe/Core-1170.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143986/e-sbe/Core-1180.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143988/e-sbe/Core-1181.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143988/e-sbe/Core-1190.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1210.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1215.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143990/e-sbe/Core-1220.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1250-BKR.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143991/e-sbe/Core-1250-TQN.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143991/e-sbe/Core-1251-BKR.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143992/e-sbe/Core-16048-BLK.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143992/e-sbe/Core-16048-MIG.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143993/e-sbe/Core-16049-BLK.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143993/e-sbe/Core-16049-RYB.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143994/e-sbe/Core-cushion.png'
+  ],
+  'EEKEN': [
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143979/e-sbe/eeken-logo.png'
+  ],
+  'PARALITE': [
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143990/e-sbe/Core-1220.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1250-BKR.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143992/e-sbe/Core-16048-BLK.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143981/e-sbe/paralite-logo.png'
+  ],
+  'PARAGON GENTS': [
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143986/e-sbe/Core-1136.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1210.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143979/e-sbe/paragon-original-logo.png'
+  ],
+  'PARAGON LADIES': [
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143986/e-sbe/Core-1170.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143990/e-sbe/Core-1220.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1215.png'
+  ],
+  'P-TOES PARALITE': [
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143988/e-sbe/Core-1190.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1210.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143993/e-sbe/Core-16049-BLK.png'
+  ],
+  'Safety': [],
+  'School': ['https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143982/e-sbe/paragon-school-logo.png'],
+  'Walkaholic': [
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143989/e-sbe/Core-1250-BKR.png',
+    'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143992/e-sbe/Core-16048-BLK.png'
+  ],
+  'Max': ['https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143982/e-sbe/max-logo.png'],
+  'Escoute': ['https://res.cloudinary.com/dieqsg5tr/image/upload/v1790143982/e-sbe/escoute-logo.png'],
+  'LoosePacking': [],
+  'BoxPacking': []
+};
+
+const paragonCards = [
+  { id: 'ParagonCore', label: 'Paragon Core', groupNames: ['PARAGON GENTS', 'PARAGON LADIES', 'PARALITE', 'P-TOES', 'Hawai Chappal'] },
+  { id: 'EEKEN', label: 'Eeken', groupNames: ['EEKEN'] },
+  { id: 'PARALITE', label: 'Paralite', groupNames: ['PARALITE', 'PARALITE OLD', 'P-TOES PARALITE'] },
+  { id: 'LoosePacking', label: 'Loose Packing', groupNames: looseGroupNames },
+  { id: 'BoxPacking', label: 'Box Packing', groupNames: boxGroupNames },
+  { id: 'PARAGON GENTS', label: 'Paragon Gents', groupNames: ['PARAGON GENTS', 'PARAGON GENTS 40%'] },
+  { id: 'PARAGON LADIES', label: 'Paragon Ladies', groupNames: ['PARAGON LADIES'] },
+  { id: 'P-TOES PARALITE', label: 'P-Toes', groupNames: ['P-TOES PARALITE'] },
+  { id: 'Safety', label: 'Safety Shoes', groupNames: ['Safety'] },
+  { id: 'School', label: 'School Shoes', groupNames: ['School', 'SCHOOL SHOE DUROLITE'] },
+  { id: 'Walkaholic', label: 'Walkaholic', groupNames: ['Walkaholic'] },
+  { id: 'Max', label: 'Max', groupNames: ['Max', 'PARAGON GENTS', 'PARAGON'] },
+  { id: 'Escoute', label: 'Escoute', groupNames: ['Escoute'] },
+];
+
+const bigBrandCards = [
+  { id: 'Cubix', label: 'Cubix', groupNames: ['CUBIX', 'CUBIX 2'], logo: CubixLogo },
+  { id: 'Florex', label: 'Florex', groupNames: ['Florex (Swastik)'], logo: FlorexLogo },
+  { id: 'ACTION', label: 'Action', groupNames: ['ACTION'], logo: ActionLogo },
+  { id: 'Reliance', label: 'Reliance', groupNames: ['RELIANCE FOOTWEAR'], logo: RelianceLogo },
+  { id: 'EEKEN', label: 'Eeken', groupNames: ['EEKEN'], logo: EekenLogo },
+];
+
+const midBrandCards = [
+  { id: 'TEUZ', label: 'Teuz', groupNames: ['TEUZ'], logo: TeuzLogo },
+  { id: 'PARIS', label: 'Paris', groupNames: ['PARIS'], logo: ParisLogo },
+  { id: 'BROCKKIE', label: 'Brockkie', groupNames: ['BROCKKIE'], logo: BrockkieLogo },
+  { id: 'XPANIA', label: 'Xpania', groupNames: ['Xpania'], logo: XpaniaLogo },
+  { id: 'TARA', label: 'Tara', groupNames: ['TARA'], logo: TaraLogo },
+  { id: 'AIRFAX', label: 'Airfax', groupNames: ['AIRFAX'], icon: 'fa-solid fa-wind' },
+  { id: 'HITWAY', label: 'Hitway', groupNames: ['HITWAY'], icon: 'fa-solid fa-rocket' },
+  { id: 'PANKAJ PLASTIC', label: 'Pankaj', groupNames: ['PANKAJ PLASTIC'], icon: 'fa-solid fa-shoe-prints' },
+  { id: 'VAISHNO PLASTIC', label: 'Vaishno', groupNames: ['VAISHNO PLASTIC'], icon: 'fa-solid fa-gem' },
+  { id: 'ADDA', label: 'Adda', groupNames: ['ADDA'], icon: 'fa-solid fa-sun' },
+  { id: 'ASHU', label: 'Ashu', groupNames: ['ASHU'], icon: 'fa-solid fa-leaf' },
+  { id: 'ADDOXY', label: 'Addoxy', groupNames: ['ADDOXY'], icon: 'fa-solid fa-shield' },
+];
+</script>
+
+<style scoped>
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-content {
+  animation: marquee 10s linear infinite;
+}
+.group:hover .marquee-content {
+  animation-play-state: paused;
+}
+
+@keyframes bounceSubtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.animate-bounce-subtle {
+  animation: bounceSubtle 2s ease-in-out infinite;
+}
+</style>
+

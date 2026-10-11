@@ -1,0 +1,3241 @@
+<template>
+  <div
+    class="flex flex-col lg:flex-row h-screen w-full bg-slate-50 font-sans text-slate-800 overflow-hidden pt-[74px] lg:pt-[72px]"
+  >
+    <!-- Sidebar -->
+    <aside
+      class="border-r border-slate-200 bg-white flex-shrink-0 flex-col h-full z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-all duration-300 w-full lg:w-[480px]"
+      :class="[mobileTab === 'brands' ? 'flex' : 'hidden lg:flex']"
+    >
+      <div
+        class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white/50 backdrop-blur-sm sticky top-0 z-10"
+      >
+        <div class="flex items-center gap-2">
+          <!-- Sidebar Home Button -->
+          <button
+            @click="$router.push('/')"
+            class="w-8 h-8 flex lg:hidden items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm active:scale-95 border border-white/20 mr-1"
+            title="Home"
+          >
+            <i class="fa-solid fa-house text-xs"></i>
+          </button>
+
+          <h2 class="text-xl font-black text-slate-800 tracking-tight">Brands</h2>
+          <span
+            class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider"
+            >{{ brands.length }}</span
+          >
+        </div>
+        <button
+          @click="selectedBrands = []"
+          class="text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors"
+          v-if="selectedBrands.length > 0"
+        >
+          Clear
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar pb-24 lg:pb-4">
+        <!-- Paragon Section -->
+        <div
+          v-if="groupedSidebar.paragon.length > 0"
+          class="p-2 transition-all rounded-2xl bg-red-50/30 hover:bg-red-50/60 border border-transparent hover:border-red-100"
+        >
+          <div class="flex items-center justify-between px-2 mb-3">
+            <div class="flex items-center gap-2">
+              <img
+                :src="`${baseUrl}assets/logos/paragon-transparent-logo.png`"
+                alt="Paragon"
+                class="h-6 object-contain"
+              />
+            </div>
+            <input
+              type="checkbox"
+              :checked="isCategorySelected('paragon')"
+              @change="toggleCategory('paragon', $event)"
+              class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div
+              v-for="item in groupedSidebar.paragon"
+              :key="item.groupName"
+              class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-red-200 shadow-sm hover:shadow-md select-none"
+              :class="{
+                '!bg-red-50 !border-red-200 ring-1 ring-red-200': selectedBrands.includes(
+                  item.groupName
+                ),
+              }"
+              @click="toggleBrand(item.groupName)"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedBrands.includes(item.groupName)"
+                class="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-gray-300 pointer-events-none"
+              />
+              <span
+                class="text-sm font-semibold text-slate-700 leading-tight"
+                :class="{ 'text-red-800': selectedBrands.includes(item.groupName) }"
+                >{{ formatProductName(item.groupName) }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Brands Section -->
+        <div
+          v-if="groupedSidebar.topBrands.length > 0"
+          class="p-2 transition-all rounded-2xl bg-amber-50/30 hover:bg-amber-50/60 border border-transparent hover:border-amber-100"
+        >
+          <div class="flex items-center justify-between px-2 mb-3">
+            <span class="text-xs font-black text-amber-600 uppercase tracking-widest pl-1"
+              >Top Brands</span
+            >
+            <input
+              type="checkbox"
+              :checked="isCategorySelected('topBrands')"
+              @change="toggleCategory('topBrands', $event)"
+              class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div
+              v-for="item in groupedSidebar.topBrands"
+              :key="item.group.groupName"
+              class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-amber-200 shadow-sm hover:shadow-md select-none"
+              :class="{
+                '!bg-amber-50 !border-amber-200 ring-1 ring-amber-200': selectedBrands.includes(
+                  item.group.groupName
+                ),
+              }"
+              @click="toggleBrand(item.group.groupName)"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedBrands.includes(item.group.groupName)"
+                class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-gray-300 pointer-events-none"
+              />
+              <div class="flex items-center gap-2 overflow-hidden">
+                <div
+                  class="w-6 h-6 rounded-full bg-white border border-amber-100 p-0.5 shrink-0 overflow-hidden shadow-sm flex items-center justify-center"
+                >
+                  <img v-if="item.logo" :src="item.logo" class="w-full h-full object-contain" />
+                  <span v-else class="text-[8px] font-bold text-amber-600">{{
+                    item.group.groupName[0]
+                  }}</span>
+                </div>
+                <span
+                  class="text-sm font-semibold text-slate-700 leading-tight truncate"
+                  :class="{ 'text-amber-800': selectedBrands.includes(item.group.groupName) }"
+                  >{{ formatProductName(item.group.groupName) }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- General Loose Packing (Teal) -->
+        <div
+          v-if="groupedSidebar.generalLoosePackingGroups.length > 0"
+          class="p-2 transition-all rounded-2xl bg-teal-50/30 hover:bg-teal-50/60 border border-transparent hover:border-teal-100"
+        >
+          <div class="flex items-center justify-between px-2 mb-3">
+            <span class="text-xs font-black text-teal-600 uppercase tracking-widest pl-1"
+              >General Loose Packing</span
+            >
+            <input
+              type="checkbox"
+              :checked="isCategorySelected('generalLoosePackingGroups')"
+              @change="toggleCategory('generalLoosePackingGroups', $event)"
+              class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div
+              v-for="item in groupedSidebar.generalLoosePackingGroups"
+              :key="item.groupName"
+              class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-teal-200 shadow-sm hover:shadow-md select-none"
+              :class="{
+                '!bg-teal-50 !border-teal-200 ring-1 ring-teal-200': selectedBrands.includes(
+                  item.groupName
+                ),
+              }"
+              @click="toggleBrand(item.groupName)"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedBrands.includes(item.groupName)"
+                class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 border-gray-300 pointer-events-none"
+              />
+              <span
+                class="text-sm font-semibold text-slate-700 leading-tight"
+                :class="{ 'text-teal-800': selectedBrands.includes(item.groupName) }"
+                >{{ formatProductName(item.groupName) }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- General Box Packing (Indigo) -->
+        <div
+          v-if="groupedSidebar.generalBoxPackingGroups.length > 0"
+          class="p-2 transition-all rounded-2xl bg-indigo-50/30 hover:bg-indigo-50/60 border border-transparent hover:border-indigo-100"
+        >
+          <div class="flex items-center justify-between px-2 mb-3">
+            <span class="text-xs font-black text-indigo-600 uppercase tracking-widest pl-1"
+              >General Box Packing</span
+            >
+            <input
+              type="checkbox"
+              :checked="isCategorySelected('generalBoxPackingGroups')"
+              @change="toggleCategory('generalBoxPackingGroups', $event)"
+              class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div
+              v-for="item in groupedSidebar.generalBoxPackingGroups"
+              :key="item.groupName"
+              class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-indigo-200 shadow-sm hover:shadow-md select-none"
+              :class="{
+                '!bg-indigo-50 !border-indigo-200 ring-1 ring-indigo-200': selectedBrands.includes(
+                  item.groupName
+                ),
+              }"
+              @click="toggleBrand(item.groupName)"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedBrands.includes(item.groupName)"
+                class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300 pointer-events-none"
+              />
+              <span
+                class="text-sm font-semibold text-slate-700 leading-tight"
+                :class="{ 'text-indigo-800': selectedBrands.includes(item.groupName) }"
+                >{{ formatProductName(item.groupName) }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Mid Brands (Purple) -->
+        <div
+          v-if="groupedSidebar.midBrands.length > 0"
+          class="p-2 transition-all rounded-2xl bg-purple-50/30 hover:bg-purple-50/60 border border-transparent hover:border-purple-100"
+        >
+          <div class="flex items-center justify-between px-2 mb-3">
+            <span class="text-xs font-black text-purple-600 uppercase tracking-widest pl-1"
+              >Mid Brands</span
+            >
+            <input
+              type="checkbox"
+              :checked="isCategorySelected('midBrands')"
+              @change="toggleCategory('midBrands', $event)"
+              class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div
+              v-for="item in groupedSidebar.midBrands"
+              :key="item.groupName"
+              class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-purple-200 shadow-sm hover:shadow-md select-none"
+              :class="{
+                '!bg-purple-50 !border-purple-200 ring-1 ring-purple-200': selectedBrands.includes(
+                  item.groupName
+                ),
+              }"
+              @click="toggleBrand(item.groupName)"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedBrands.includes(item.groupName)"
+                class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-gray-300 pointer-events-none"
+              />
+              <span
+                class="text-sm font-semibold text-slate-700 leading-tight"
+                :class="{ 'text-purple-800': selectedBrands.includes(item.groupName) }"
+                >{{ formatProductName(item.groupName) }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Socks (Cyan) -->
+        <div
+          v-if="groupedSidebar.socksGroups.length > 0"
+          class="p-2 transition-all rounded-2xl bg-cyan-50/30 hover:bg-cyan-50/60 border border-transparent hover:border-cyan-100"
+        >
+          <div class="flex items-center justify-between px-2 mb-3">
+            <span class="text-xs font-black text-cyan-600 uppercase tracking-widest pl-1"
+              >Socks</span
+            >
+            <input
+              type="checkbox"
+              :checked="isCategorySelected('socksGroups')"
+              @change="toggleCategory('socksGroups', $event)"
+              class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div
+              v-for="item in groupedSidebar.socksGroups"
+              :key="item.groupName"
+              class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-cyan-200 shadow-sm hover:shadow-md select-none"
+              :class="{
+                '!bg-cyan-50 !border-cyan-200 ring-1 ring-cyan-200': selectedBrands.includes(
+                  item.groupName
+                ),
+              }"
+              @click="toggleBrand(item.groupName)"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedBrands.includes(item.groupName)"
+                class="w-4 h-4 rounded text-cyan-600 focus:ring-cyan-500 border-gray-300 pointer-events-none"
+              />
+              <span
+                class="text-sm font-semibold text-slate-700 leading-tight"
+                :class="{ 'text-cyan-800': selectedBrands.includes(item.groupName) }"
+                >{{ formatProductName(item.groupName) }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- General & Clubs Wrapper -->
+        <div class="p-4 bg-emerald-50/40 border border-emerald-100 rounded-2xl space-y-6">
+          <!-- General Items -->
+          <div v-if="groupedSidebar.general.length > 0">
+            <div class="flex items-center justify-between px-2 mb-3">
+              <span class="text-xs font-black text-emerald-600 uppercase tracking-widest pl-1"
+                >General</span
+              >
+              <input
+                type="checkbox"
+                :checked="isCategorySelected('general')"
+                @change="toggleCategory('general', $event)"
+                class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div
+                v-for="item in groupedSidebar.general"
+                :key="item.groupName"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-emerald-200 shadow-sm hover:shadow-md select-none"
+                :class="{
+                  '!bg-emerald-50 !border-emerald-200 ring-1 ring-emerald-200':
+                    selectedBrands.includes(item.groupName),
+                }"
+                @click="toggleBrand(item.groupName)"
+              >
+                <input
+                  type="checkbox"
+                  :checked="selectedBrands.includes(item.groupName)"
+                  class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-gray-300 pointer-events-none"
+                />
+                <span
+                  class="text-sm font-semibold text-slate-700 leading-tight"
+                  :class="{ 'text-emerald-800': selectedBrands.includes(item.groupName) }"
+                  >{{ formatProductName(item.groupName) }}</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Bansal Club -->
+          <div v-if="groupedSidebar.bansalGroups.length > 0">
+            <div class="flex items-center justify-between px-2 mb-3">
+              <span class="text-xs font-black text-emerald-600 uppercase tracking-widest pl-1"
+                >BANSAL CLUB</span
+              >
+              <input
+                type="checkbox"
+                :checked="isCategorySelected('bansalGroups')"
+                @change="toggleCategory('bansalGroups', $event)"
+                class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div
+                v-for="item in groupedSidebar.bansalGroups"
+                :key="item.groupName"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-emerald-200 shadow-sm hover:shadow-md select-none"
+                :class="{
+                  '!bg-emerald-50 !border-emerald-200 ring-1 ring-emerald-200':
+                    selectedBrands.includes(item.groupName),
+                }"
+                @click="toggleBrand(item.groupName)"
+              >
+                <input
+                  type="checkbox"
+                  :checked="selectedBrands.includes(item.groupName)"
+                  class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-gray-300 pointer-events-none"
+                />
+                <span
+                  class="text-sm font-semibold text-slate-700 leading-tight"
+                  :class="{ 'text-emerald-800': selectedBrands.includes(item.groupName) }"
+                  >{{ formatProductName(item.groupName) }}</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Airson Club -->
+          <div v-if="groupedSidebar.airsonGroups.length > 0">
+            <div class="flex items-center justify-between px-2 mb-3">
+              <span class="text-xs font-black text-emerald-600 uppercase tracking-widest pl-1"
+                >AIRSON CLUB</span
+              >
+              <input
+                type="checkbox"
+                :checked="isCategorySelected('airsonGroups')"
+                @change="toggleCategory('airsonGroups', $event)"
+                class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div
+                v-for="item in groupedSidebar.airsonGroups"
+                :key="item.groupName"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-emerald-200 shadow-sm hover:shadow-md select-none"
+                :class="{
+                  '!bg-emerald-50 !border-emerald-200 ring-1 ring-emerald-200':
+                    selectedBrands.includes(item.groupName),
+                }"
+                @click="toggleBrand(item.groupName)"
+              >
+                <input
+                  type="checkbox"
+                  :checked="selectedBrands.includes(item.groupName)"
+                  class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-gray-300 pointer-events-none"
+                />
+                <span
+                  class="text-sm font-semibold text-slate-700 leading-tight"
+                  :class="{ 'text-emerald-800': selectedBrands.includes(item.groupName) }"
+                  >{{ formatProductName(item.groupName) }}</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Kohinoor Club -->
+          <div v-if="groupedSidebar.kohinoorGroups.length > 0">
+            <div class="flex items-center justify-between px-2 mb-3">
+              <span class="text-xs font-black text-emerald-600 uppercase tracking-widest pl-1"
+                >KOHINOOR CLUB</span
+              >
+              <input
+                type="checkbox"
+                :checked="isCategorySelected('kohinoorGroups')"
+                @change="toggleCategory('kohinoorGroups', $event)"
+                class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div
+                v-for="item in groupedSidebar.kohinoorGroups"
+                :key="item.groupName"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-emerald-200 shadow-sm hover:shadow-md select-none"
+                :class="{
+                  '!bg-emerald-50 !border-emerald-200 ring-1 ring-emerald-200':
+                    selectedBrands.includes(item.groupName),
+                }"
+                @click="toggleBrand(item.groupName)"
+              >
+                <input
+                  type="checkbox"
+                  :checked="selectedBrands.includes(item.groupName)"
+                  class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-gray-300 pointer-events-none"
+                />
+                <span
+                  class="text-sm font-semibold text-slate-700 leading-tight"
+                  :class="{ 'text-emerald-800': selectedBrands.includes(item.groupName) }"
+                  >{{ formatProductName(item.groupName) }}</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Naresh Club -->
+          <div v-if="groupedSidebar.nareshGroups.length > 0">
+            <div class="flex items-center justify-between px-2 mb-3">
+              <span class="text-xs font-black text-emerald-600 uppercase tracking-widest pl-1"
+                >NARESH CLUB</span
+              >
+              <input
+                type="checkbox"
+                :checked="isCategorySelected('nareshGroups')"
+                @change="toggleCategory('nareshGroups', $event)"
+                class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div
+                v-for="item in groupedSidebar.nareshGroups"
+                :key="item.groupName"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-emerald-200 shadow-sm hover:shadow-md select-none"
+                :class="{
+                  '!bg-emerald-50 !border-emerald-200 ring-1 ring-emerald-200':
+                    selectedBrands.includes(item.groupName),
+                }"
+                @click="toggleBrand(item.groupName)"
+              >
+                <input
+                  type="checkbox"
+                  :checked="selectedBrands.includes(item.groupName)"
+                  class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-gray-300 pointer-events-none"
+                />
+                <span
+                  class="text-sm font-semibold text-slate-700 leading-tight"
+                  :class="{ 'text-emerald-800': selectedBrands.includes(item.groupName) }"
+                  >{{ formatProductName(item.groupName) }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Others -->
+        <div
+          v-if="groupedSidebar.others.length > 0"
+          class="p-2 transition-all rounded-2xl bg-slate-50 border border-transparent hover:border-slate-200"
+        >
+          <div class="flex items-center justify-between px-2 mb-3">
+            <span class="text-xs font-black text-slate-400 uppercase tracking-widest pl-1"
+              >Others</span
+            >
+            <input
+              type="checkbox"
+              :checked="isCategorySelected('others')"
+              @change="toggleCategory('others', $event)"
+              class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div
+              v-for="item in groupedSidebar.others"
+              :key="item.groupName"
+              class="flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer bg-white border border-transparent hover:border-slate-300 shadow-sm hover:shadow-md select-none"
+              :class="{
+                '!bg-slate-100 !border-slate-300 ring-1 ring-slate-300': selectedBrands.includes(
+                  item.groupName
+                ),
+              }"
+              @click="toggleBrand(item.groupName)"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedBrands.includes(item.groupName)"
+                class="w-4 h-4 rounded text-slate-600 focus:ring-slate-500 border-gray-300 pointer-events-none"
+              />
+              <span
+                class="text-sm font-semibold text-slate-700 leading-tight"
+                :class="{ 'text-slate-900': selectedBrands.includes(item.groupName) }"
+                >{{ formatProductName(item.groupName) }}</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main
+      class="flex-1 flex-col h-full relative overflow-hidden bg-slate-50/50"
+      :class="[mobileTab === 'export' ? 'flex' : 'hidden lg:flex']"
+    >
+      <div class="flex h-full flex-col lg:flex-row w-full">
+        <!-- Settings & Actions Area -->
+        <div class="flex-1 overflow-y-auto p-4 lg:p-10 pb-24 lg:pb-10 w-full">
+          <header class="mb-8 flex items-center gap-4">
+            <button
+              @click="$router.push('/')"
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-md active:scale-95 border border-white/20"
+              title="Home"
+            >
+              <i class="fa-solid fa-house"></i>
+            </button>
+            <div>
+              <h1 class="text-3xl font-black text-slate-800 tracking-tight">Generate Catalog</h1>
+              <p class="text-slate-500 font-medium">Configure your export settings</p>
+            </div>
+          </header>
+
+          <div class="space-y-6 max-w-2xl">
+            <!-- Filters Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-filter text-blue-500"></i> Filters
+              </h3>
+              <div class="space-y-4">
+                <label
+                  class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all"
+                >
+                  <input
+                    type="checkbox"
+                    v-model="onlyWithPhotos"
+                    class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span class="font-medium text-slate-700">Only include products with photos</span>
+                </label>
+
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        v-model="minQtyEnabled"
+                        class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <span class="font-medium text-slate-700">Minimum Quantity Filter</span>
+                    </label>
+                    <div
+                      class="flex items-center gap-2"
+                      :class="{ 'opacity-50 pointer-events-none': !minQtyEnabled }"
+                    >
+                      <input
+                        type="number"
+                        v-model.number="minQty"
+                        class="w-16 text-center font-bold bg-white border border-slate-300 rounded-lg py-1 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                      <span class="text-sm font-semibold text-slate-400">pairs</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PDF Mode Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-file-pdf text-red-500"></i> PDF Mode
+              </h3>
+              <div class="grid grid-cols-2 gap-4">
+                <label class="cursor-pointer relative">
+                  <input type="radio" v-model="pdfMode" value="separate" class="peer sr-only" />
+                  <div
+                    class="p-4 rounded-xl border-2 border-slate-200 hover:border-blue-400 peer-checked:border-blue-600 peer-checked:bg-blue-50 transition-all text-center"
+                  >
+                    <span class="block font-bold text-slate-700 peer-checked:text-blue-700 mb-1"
+                      >Separate Files</span
+                    >
+                    <span class="text-xs text-slate-500">One PDF per brand</span>
+                  </div>
+                </label>
+                <label class="cursor-pointer relative">
+                  <input type="radio" v-model="pdfMode" value="combined" class="peer sr-only" />
+                  <div
+                    class="p-4 rounded-xl border-2 border-slate-200 hover:border-blue-400 peer-checked:border-blue-600 peer-checked:bg-blue-50 transition-all text-center"
+                  >
+                    <span class="block font-bold text-slate-700 peer-checked:text-blue-700 mb-1"
+                      >Combined Catalog</span
+                    >
+                    <span class="text-xs text-slate-500">All brands in one PDF</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- ZIP Mode Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-file-zipper text-yellow-500"></i> ZIP Mode
+              </h3>
+              <div class="grid grid-cols-2 gap-4">
+                <label class="cursor-pointer relative">
+                  <input type="radio" v-model="zipMode" value="separate" class="peer sr-only" />
+                  <div
+                    class="p-4 rounded-xl border-2 border-slate-200 hover:border-emerald-400 peer-checked:border-emerald-600 peer-checked:bg-emerald-50 transition-all text-center"
+                  >
+                    <span class="block font-bold text-slate-700 peer-checked:text-emerald-700 mb-1"
+                      >Separate Folders</span
+                    >
+                    <span class="text-xs text-slate-500">One folder per brand</span>
+                  </div>
+                </label>
+                <label class="cursor-pointer relative">
+                  <input type="radio" v-model="zipMode" value="combined" class="peer sr-only" />
+                  <div
+                    class="p-4 rounded-xl border-2 border-slate-200 hover:border-emerald-400 peer-checked:border-emerald-600 peer-checked:bg-emerald-50 transition-all text-center"
+                  >
+                    <span class="block font-bold text-slate-700 peer-checked:text-emerald-700 mb-1"
+                      >Combined (Flat)</span
+                    >
+                    <span class="text-xs text-slate-500">All images in root</span>
+                  </div>
+                </label>
+              </div>
+              <!-- Batch checkbox (only when combined) -->
+              <div v-if="zipMode === 'combined'" class="mt-3 px-1">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    v-model="zipBatchMode"
+                    class="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 border-gray-300"
+                  />
+                  <span class="text-sm font-medium text-slate-600"
+                    >Split into batches of 99 images per subfolder</span
+                  >
+                </label>
+              </div>
+            </div>
+
+            <!-- Action Area -->
+            <div class="grid grid-cols-1 gap-3 pt-4">
+              <button
+                @click="generatePdf"
+                :disabled="selectedBrands.length === 0 || isGenerating"
+                class="w-full py-4 bg-slate-900 hover:bg-black disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg"
+              >
+                <span v-if="isGenerating && isPdfGenerating" class="flex items-center gap-2">
+                  <svg
+                    class="animate-spin h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  {{
+                    pdfMode === 'combined'
+                      ? 'Merging PDF...'
+                      : `Generating PDF (${completedCount}/${selectedBrands.length})`
+                  }}
+                </span>
+                <span v-else>Download PDF Catalog</span>
+              </button>
+
+              <div class="grid grid-cols-2 gap-3">
+                <button
+                  @click="downloadAsImages"
+                  :disabled="selectedBrands.length === 0 || isGenerating"
+                  class="py-3 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <span
+                    v-if="isGenerating && !isPdfGenerating && !isZipGenerating"
+                    class="flex items-center gap-2"
+                  >
+                    <svg
+                      class="animate-spin h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Creating Images ({{ completedCount }}/{{ selectedBrands.length }})
+                  </span>
+                  <span v-else>Download Images</span>
+                </button>
+
+                <button
+                  @click="downloadAsZip"
+                  :disabled="selectedBrands.length === 0 || isGenerating"
+                  class="py-3 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <span v-if="isGenerating && isZipGenerating" class="flex items-center gap-2">
+                    <svg
+                      class="animate-spin h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Zipping ({{ completedCount }}/{{ selectedBrands.length }})
+                  </span>
+                  <span v-else>Download Images (ZIP)</span>
+                </button>
+              </div>
+
+              <!-- Native App Share Button (WhatsApp/etc) -->
+              <button
+                @click="shareViaNativeApp"
+                :disabled="selectedBrands.length === 0 || isGenerating"
+                class="w-full mt-3 py-4 bg-[#25D366] hover:bg-[#128C7E] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg"
+              >
+                <span v-if="isGenerating && isSharing" class="flex items-center gap-2">
+                  <svg
+                    class="animate-spin h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Preparing Share ({{ completedCount }}/{{ selectedBrands.length }})
+                </span>
+                <span v-else class="flex items-center gap-2">
+                  <i class="fa-brands fa-whatsapp text-2xl"></i>
+                  Share on WhatsApp
+                </span>
+              </button>
+
+              <!-- One Touch Mode Button -->
+              <button
+                @click="openOneTouchModal"
+                :disabled="isGenerating"
+                class="w-full mt-3 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg"
+              >
+                <i class="fa-solid fa-bolt"></i>
+                One Touch Mode
+              </button>
+
+              <!-- One Touch Progress Area -->
+              <div
+                v-if="isGenerating && isOneTouchSharing"
+                class="mt-4 p-4 bg-violet-50/50 border border-violet-100 rounded-xl space-y-2"
+              >
+                <div
+                  class="flex justify-between text-xs font-bold text-violet-800 uppercase tracking-widest"
+                >
+                  <span
+                    >{{ oneTouchCurrentGroup }} ({{ oneTouchGroupIndex }}/{{
+                      oneTouchTotalGroups
+                    }})</span
+                  >
+                </div>
+                <div class="h-2 w-full bg-violet-100 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-violet-500 rounded-full transition-all duration-300"
+                    :style="{ width: `${(oneTouchGroupIndex / oneTouchTotalGroups) * 100}%` }"
+                  ></div>
+                </div>
+                <div class="text-[10px] text-violet-600/70 text-center font-medium">
+                  {{ oneTouchProgress }}
+                </div>
+              </div>
+
+              <!-- Progress Bar -->
+              <div
+                v-if="isGenerating"
+                class="mt-4 p-4 bg-blue-50/50 border border-blue-100 rounded-xl space-y-2"
+              >
+                <div
+                  class="flex justify-between text-xs font-bold text-blue-800 uppercase tracking-widest"
+                >
+                  <span>Processing: {{ currentBrand }}</span>
+                  <span>{{ Math.round((completedCount / selectedBrands.length) * 100) }}%</span>
+                </div>
+                <div class="h-2 w-full bg-blue-100 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-blue-500 rounded-full transition-all duration-300"
+                    :style="{ width: `${(completedCount / selectedBrands.length) * 100}%` }"
+                  ></div>
+                </div>
+                <div class="text-[10px] text-blue-600/70 text-center font-medium">
+                  Please wait, larger brands may take a minute...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Sidebar (Right) -->
+        <div class="w-80 border-l border-slate-200 bg-white p-6 overflow-y-auto hidden xl:block">
+          <div class="mb-6">
+            <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-1">
+              Summary
+            </h2>
+            <p class="text-sm text-slate-500 font-medium">
+              {{ selectedBrands.length }} brands selected
+            </p>
+          </div>
+
+          <div v-if="selectedBrands.length === 0" class="text-center py-10 opacity-50">
+            <div class="text-4xl mb-2">📋</div>
+            <p class="text-sm font-medium">No brands selected</p>
+          </div>
+
+          <div v-else class="space-y-2">
+            <div
+              v-for="brand in selectedBrands"
+              :key="brand"
+              class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 group"
+            >
+              <span class="text-xs font-bold text-slate-700 truncate pr-2">{{
+                formatProductName(brand)
+              }}</span>
+              <button
+                @click="toggleBrand(brand)"
+                class="text-slate-400 hover:text-red-500 transition-colors"
+              >
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <div
+      class="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 flex justify-around items-center h-16 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe"
+    >
+      <button
+        @click="mobileTab = 'brands'"
+        class="flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors outline-none bg-transparent rounded-none hover:bg-transparent shadow-none"
+        :class="mobileTab === 'brands' ? 'text-blue-600' : 'text-slate-400'"
+      >
+        <span class="text-[10px] font-bold uppercase tracking-wide">Brands</span>
+      </button>
+
+      <div class="h-8 w-[1px] bg-slate-100"></div>
+
+      <button
+        @click="mobileTab = 'export'"
+        class="flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors outline-none bg-transparent rounded-none hover:bg-transparent shadow-none"
+        :class="mobileTab === 'export' ? 'text-blue-600' : 'text-slate-400'"
+      >
+        <div class="relative">
+          <span
+            v-if="selectedBrands.length > 0"
+            class="absolute -top-1.5 -right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-sm ring-2 ring-white"
+            >{{ selectedBrands.length }}</span
+          >
+        </div>
+        <span class="text-[10px] font-bold uppercase tracking-wide">Export</span>
+      </button>
+    </div>
+
+    <!-- Toast -->
+    <div v-if="showToast" class="fixed bottom-6 right-6 z-[60] animate-bounce-in">
+      <div class="bg-slate-800 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-green-400"></i>
+        <span class="font-medium">{{ toastMessage }}</span>
+      </div>
+    </div>
+
+    <!-- One Touch Full Screen Mode -->
+    <div
+      v-if="showOneTouchModal"
+      class="fixed inset-0 z-[80] bg-slate-50 flex flex-col overflow-hidden"
+    >
+      <!-- Top Navigation Bar -->
+      <header
+        class="px-4 sm:px-6 py-3 bg-white/95 backdrop-blur-xl border-b border-slate-200 flex items-center justify-between flex-shrink-0 shadow-2xs"
+        style="padding-top: max(env(safe-area-inset-top, 24px), 12px);"
+      >
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            @click="handleCloseOneTouch"
+            class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 flex items-center justify-center text-slate-600 cursor-pointer transition-all shadow-xs"
+            title="Back"
+          >
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+          </button>
+          <div class="flex items-center gap-2.5">
+            <div
+              class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center shadow-xs text-white"
+            >
+              <i class="fa-solid fa-bolt text-sm"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-base sm:text-lg font-black text-slate-900 leading-tight">One Touch Mode</h2>
+                <span class="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 text-[10px] font-black uppercase">Auto Share</span>
+              </div>
+              <p class="text-[11px] text-slate-400 font-semibold">
+                {{ selectedGroupsCount }} of {{ oneTouchGroups.length }} Brand Groups Active
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          @click="handleCloseOneTouch"
+          class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-95 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
+          title="Close"
+        >
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </header>
+
+      <!-- 2-Column Pill Toggles Row (Low Stock, With Photos, Min Qty, Select All) -->
+      <div class="grid grid-cols-2 gap-2 sm:gap-3 p-3 sm:px-6 bg-slate-100/60 border-b border-slate-200/80 flex-shrink-0">
+        <!-- 1. Low Stock Mode -->
+        <div
+          class="flex items-center justify-between p-2.5 rounded-2xl cursor-pointer transition-all border shadow-2xs select-none"
+          :class="oneTouchLowStockMode ? 'bg-amber-50/90 border-amber-300 ring-1 ring-amber-400/20' : 'bg-white border-slate-200/90 hover:border-slate-300'"
+          @click="oneTouchLowStockMode = !oneTouchLowStockMode"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <div
+              class="w-7 h-7 rounded-xl flex items-center justify-center text-xs flex-shrink-0"
+              :class="oneTouchLowStockMode ? 'bg-amber-200 text-amber-800' : 'bg-slate-100 text-slate-500'"
+            >
+              <i class="fa-solid fa-arrow-down-short-wide"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="text-xs font-black block leading-tight truncate" :class="oneTouchLowStockMode ? 'text-amber-900' : 'text-slate-700'">Low Stock</span>
+              <p class="text-[10px] font-semibold leading-none mt-0.5 truncate" :class="oneTouchLowStockMode ? 'text-amber-600' : 'text-slate-400'">
+                {{ oneTouchLowStockMode ? 'Min 1 → Max 10' : 'Min 10 → Max ∞' }}
+              </p>
+            </div>
+          </div>
+          <div
+            class="w-8 h-4.5 rounded-full relative transition-colors duration-200 flex-shrink-0 ml-1"
+            :class="oneTouchLowStockMode ? 'bg-amber-500' : 'bg-slate-300'"
+          >
+            <div
+              class="absolute top-[2px] w-3.5 h-3.5 rounded-full bg-white shadow-xs transition-all duration-200"
+              :class="oneTouchLowStockMode ? 'left-[16px]' : 'left-[2px]'"
+            ></div>
+          </div>
+        </div>
+
+        <!-- 2. Only With Photos -->
+        <div
+          class="flex items-center justify-between p-2.5 rounded-2xl cursor-pointer transition-all border shadow-2xs select-none"
+          :class="oneTouchOnlyWithPhotos ? 'bg-violet-50/90 border-violet-300 ring-1 ring-violet-400/20' : 'bg-white border-slate-200/90 hover:border-slate-300'"
+          @click="oneTouchOnlyWithPhotos = !oneTouchOnlyWithPhotos"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <div
+              class="w-7 h-7 rounded-xl flex items-center justify-center text-xs flex-shrink-0"
+              :class="oneTouchOnlyWithPhotos ? 'bg-violet-200 text-violet-800' : 'bg-slate-100 text-slate-500'"
+            >
+              <i class="fa-solid fa-image"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="text-xs font-black block leading-tight truncate" :class="oneTouchOnlyWithPhotos ? 'text-violet-900' : 'text-slate-700'">With Photos</span>
+              <p class="text-[10px] font-semibold leading-none mt-0.5 truncate" :class="oneTouchOnlyWithPhotos ? 'text-violet-600' : 'text-slate-400'">
+                {{ oneTouchOnlyWithPhotos ? 'Images only' : 'All articles' }}
+              </p>
+            </div>
+          </div>
+          <div
+            class="w-8 h-4.5 rounded-full relative transition-colors duration-200 flex-shrink-0 ml-1"
+            :class="oneTouchOnlyWithPhotos ? 'bg-violet-600' : 'bg-slate-300'"
+          >
+            <div
+              class="absolute top-[2px] w-3.5 h-3.5 rounded-full bg-white shadow-xs transition-all duration-200"
+              :class="oneTouchOnlyWithPhotos ? 'left-[16px]' : 'left-[2px]'"
+            ></div>
+          </div>
+        </div>
+
+        <!-- 3. Minimum Quantity Filter -->
+        <div
+          class="flex items-center justify-between p-2.5 rounded-2xl cursor-pointer transition-all border shadow-2xs select-none"
+          :class="oneTouchMinQtyEnabled ? 'bg-emerald-50/90 border-emerald-300 ring-1 ring-emerald-400/20' : 'bg-white border-slate-200/90 hover:border-slate-300'"
+          @click="oneTouchMinQtyEnabled = !oneTouchMinQtyEnabled"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <div
+              class="w-7 h-7 rounded-xl flex items-center justify-center text-xs flex-shrink-0"
+              :class="oneTouchMinQtyEnabled ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500'"
+            >
+              <i class="fa-solid fa-filter"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="text-xs font-black block leading-tight truncate" :class="oneTouchMinQtyEnabled ? 'text-emerald-900' : 'text-slate-700'">Min Qty Filter</span>
+              <p class="text-[10px] font-semibold leading-none mt-0.5 truncate" :class="oneTouchMinQtyEnabled ? 'text-emerald-600' : 'text-slate-400'">
+                {{ oneTouchMinQtyEnabled ? 'Enforce limits' : 'All quantities' }}
+              </p>
+            </div>
+          </div>
+          <div
+            class="w-8 h-4.5 rounded-full relative transition-colors duration-200 flex-shrink-0 ml-1"
+            :class="oneTouchMinQtyEnabled ? 'bg-emerald-600' : 'bg-slate-300'"
+          >
+            <div
+              class="absolute top-[2px] w-3.5 h-3.5 rounded-full bg-white shadow-xs transition-all duration-200"
+              :class="oneTouchMinQtyEnabled ? 'left-[16px]' : 'left-[2px]'"
+            ></div>
+          </div>
+        </div>
+
+        <!-- 4. Select All Groups (Default ON) -->
+        <div
+          class="flex items-center justify-between p-2.5 rounded-2xl cursor-pointer transition-all border shadow-2xs select-none"
+          :class="isAllOneTouchGroupsSelected ? 'bg-indigo-50/90 border-indigo-300 ring-1 ring-indigo-400/20' : 'bg-white border-slate-200/90 hover:border-slate-300'"
+          @click="toggleSelectAllOneTouchGroups"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <div
+              class="w-7 h-7 rounded-xl flex items-center justify-center text-xs flex-shrink-0"
+              :class="isAllOneTouchGroupsSelected ? 'bg-indigo-200 text-indigo-800' : 'bg-slate-100 text-slate-500'"
+            >
+              <i class="fa-solid fa-check-double"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="text-xs font-black block leading-tight truncate" :class="isAllOneTouchGroupsSelected ? 'text-indigo-900' : 'text-slate-700'">Select All</span>
+              <p class="text-[10px] font-semibold leading-none mt-0.5 truncate" :class="isAllOneTouchGroupsSelected ? 'text-indigo-600' : 'text-slate-400'">
+                {{ selectedGroupsCount }} of {{ oneTouchGroups.length }} active
+              </p>
+            </div>
+          </div>
+          <div
+            class="w-8 h-4.5 rounded-full relative transition-colors duration-200 flex-shrink-0 ml-1"
+            :class="isAllOneTouchGroupsSelected ? 'bg-indigo-600' : 'bg-slate-300'"
+          >
+            <div
+              class="absolute top-[2px] w-3.5 h-3.5 rounded-full bg-white shadow-xs transition-all duration-200"
+              :class="isAllOneTouchGroupsSelected ? 'left-[16px]' : 'left-[2px]'"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sort By Setting -->
+      <div class="px-3 sm:px-6 py-3 bg-white border-b border-slate-200/80 flex-shrink-0 shadow-sm z-10 relative">
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Sort Items By</label>
+        <div class="flex gap-1.5 bg-slate-100/50 p-1 rounded-xl border border-slate-200/60">
+          <label class="flex-1 text-center py-2 px-1 rounded-lg text-[11px] sm:text-xs font-bold cursor-pointer transition-all select-none"
+                 :class="oneTouchSortMode === 'default' ? 'bg-white shadow-sm text-slate-800 ring-1 ring-slate-200' : 'text-slate-500 hover:bg-slate-200/50'">
+            <input type="radio" v-model="oneTouchSortMode" value="default" class="hidden" />
+            <i class="fa-solid fa-layer-group mr-1 opacity-60"></i> Brand Default
+          </label>
+          <label class="flex-1 text-center py-2 px-1 rounded-lg text-[11px] sm:text-xs font-bold cursor-pointer transition-all select-none"
+                 :class="oneTouchSortMode === 'qtyDesc' ? 'bg-white shadow-sm text-slate-800 ring-1 ring-slate-200' : 'text-slate-500 hover:bg-slate-200/50'">
+            <input type="radio" v-model="oneTouchSortMode" value="qtyDesc" class="hidden" />
+            <i class="fa-solid fa-arrow-down-9-1 mr-1 opacity-60"></i> Qty (High to Low)
+          </label>
+          <label class="flex-1 text-center py-2 px-1 rounded-lg text-[11px] sm:text-xs font-bold cursor-pointer transition-all select-none"
+                 :class="oneTouchSortMode === 'newest' ? 'bg-white shadow-sm text-slate-800 ring-1 ring-slate-200' : 'text-slate-500 hover:bg-slate-200/50'">
+            <input type="radio" v-model="oneTouchSortMode" value="newest" class="hidden" />
+            <i class="fa-solid fa-sparkles mr-1 opacity-60"></i> New Arrivals
+          </label>
+        </div>
+      </div>
+
+      <!-- Group List -->
+      <div class="flex-1 overflow-y-auto px-3 sm:px-6 py-3 space-y-2 custom-scrollbar">
+        <div
+          v-for="(group, idx) in oneTouchGroups"
+          :key="idx"
+          class="rounded-2xl border transition-all overflow-hidden bg-white shadow-2xs"
+          :class="
+            group.enabled
+              ? 'border-violet-200/90'
+              : 'border-slate-200/60 opacity-60'
+          "
+        >
+          <div
+            class="flex flex-col cursor-pointer hover:bg-slate-50/80"
+            @click="group.isExpanded = !group.isExpanded"
+          >
+            <!-- Row 1: Brand Name & Icons -->
+            <div class="flex items-center gap-3 px-3.5 py-3">
+              <input
+                type="checkbox"
+                v-model="group.enabled"
+                @click.stop
+                class="w-5 h-5 rounded-lg text-violet-600 focus:ring-violet-500 border-gray-300 cursor-pointer flex-shrink-0"
+              />
+              <span class="text-xl flex-shrink-0">{{ group.icon }}</span>
+              <span class="flex-1 text-sm font-black text-slate-800 leading-tight truncate">{{
+                group.label
+              }}</span>
+
+              <!-- Status Indicator -->
+              <div v-if="group.status === 'preparing'" class="flex-shrink-0">
+                <svg
+                  class="animate-spin h-4 w-4 text-violet-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+              <div v-else-if="group.status === 'ready'" class="flex-shrink-0 text-emerald-500">
+                <i class="fa-solid fa-check-circle text-lg"></i>
+              </div>
+
+              <!-- Gear icon for sub-brand picker / settings -->
+              <button
+                v-if="group.brands.length > 1 || group.isNewArrival"
+                @click.stop="group.showBrandPicker = !group.showBrandPicker"
+                class="w-8 h-8 rounded-xl flex items-center justify-center transition-all flex-shrink-0 ml-1 cursor-pointer"
+                :class="group.showBrandPicker ? 'bg-violet-200 text-violet-800' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
+                :title="group.isNewArrival ? 'Configure timeframe' : 'Configure sub-brands (' + group.activeBrands.length + '/' + group.brands.length + ')'"
+              >
+                <i class="fa-solid fa-gear text-xs"></i>
+              </button>
+              <i
+                class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform ml-1"
+                :class="{ 'rotate-180': group.isExpanded }"
+              ></i>
+            </div>
+
+            <!-- Row 2: Min/Max Settings -->
+            <div
+              class="flex items-center gap-2 px-11 pb-3 w-full"
+              :class="{
+                'opacity-40 pointer-events-none': !oneTouchMinQtyEnabled || !group.enabled,
+              }"
+              @click.stop
+            >
+              <div class="flex items-center bg-slate-100 rounded-xl overflow-hidden border border-slate-200/60 shadow-inner flex-1">
+                <div class="bg-slate-200/80 px-2.5 py-1 flex items-center justify-center border-r border-slate-200/60">
+                  <span class="text-[9px] text-slate-500 font-black tracking-widest uppercase">Min</span>
+                </div>
+                <input
+                  type="number"
+                  v-model="group.minQty"
+                  class="w-full text-center font-bold text-xs bg-transparent py-1.5 focus:ring-2 focus:ring-violet-500 outline-none"
+                />
+              </div>
+              
+              <div class="flex items-center bg-slate-100 rounded-xl overflow-hidden border border-slate-200/60 shadow-inner flex-1">
+                <div class="bg-slate-200/80 px-2.5 py-1 flex items-center justify-center border-r border-slate-200/60">
+                  <span class="text-[9px] text-slate-500 font-black tracking-widest uppercase">Max</span>
+                </div>
+                <input
+                  type="text"
+                  v-model="group.maxQty"
+                  placeholder="∞"
+                  class="w-full text-center font-bold text-xs bg-transparent py-1.5 focus:ring-2 focus:ring-violet-500 outline-none placeholder:text-slate-300"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub-brand Picker / Settings -->
+          <div
+            v-if="group.showBrandPicker"
+            class="px-4 pb-3 border-t border-violet-100 bg-violet-50/30"
+          >
+            <template v-if="group.isNewArrival">
+              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2 pt-2">Timeframe</p>
+              <div class="flex flex-wrap gap-2">
+                <label v-for="days in [30, 45, 60]" :key="days" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl cursor-pointer transition-all text-xs font-semibold border" :class="group.newArrivalDays === days ? 'bg-violet-100 border-violet-300 text-violet-800' : 'bg-slate-50 border-slate-200 text-slate-400'">
+                  <input type="radio" v-model="group.newArrivalDays" :value="days" class="hidden" />
+                  Latest {{ days }} Days
+                </label>
+              </div>
+            </template>
+            <template v-else>
+              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2 pt-2">Sub-brands</p>
+              <div class="flex flex-wrap gap-2">
+                <label
+                  v-for="brand in group.brands"
+                  :key="brand"
+                  class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl cursor-pointer transition-all text-xs font-semibold border"
+                  :class="group.activeBrands.includes(brand)
+                    ? 'bg-violet-100 border-violet-300 text-violet-800'
+                    : 'bg-slate-50 border-slate-200 text-slate-400 line-through'"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="group.activeBrands.includes(brand)"
+                    @change="toggleSubBrand(idx, brand)"
+                    class="w-3.5 h-3.5 rounded text-violet-600 focus:ring-violet-500 border-gray-300"
+                  />
+                  {{ brand }}
+                </label>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1.5">
+                {{ group.activeBrands.length }} of {{ group.brands.length }} selected
+              </p>
+            </template>
+          </div>
+
+          <!-- Accordion Dropdown -->
+          <div
+            v-if="group.isExpanded"
+            class="px-4 pb-3 pt-2 border-t border-violet-100 bg-white/50"
+          >
+            <div
+              v-if="group.batches.length === 0"
+              class="text-xs text-slate-400 text-center py-2 font-medium"
+            >
+              No batches prepared yet. Click Start below.
+            </div>
+            <div v-else class="grid grid-cols-2 gap-2 mt-2">
+              <button
+                v-for="(batch, bIdx) in group.batches"
+                :key="bIdx"
+                @click="shareBatchDirectly(batch)"
+                :disabled="batch.status !== 'ready'"
+                class="py-2.5 px-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                :class="{
+                  'bg-slate-100 text-slate-400 cursor-not-allowed': batch.status === 'pending',
+                  'bg-blue-100 text-blue-700 cursor-not-allowed': batch.status === 'preparing',
+                  'bg-emerald-100 hover:bg-emerald-200 text-emerald-800 active:scale-95 cursor-pointer border border-emerald-200':
+                    batch.status === 'ready',
+                }"
+              >
+                <svg
+                  v-if="batch.status === 'preparing'"
+                  class="animate-spin h-3 w-3"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <i v-else-if="batch.status === 'ready'" class="fa-brands fa-whatsapp text-sm text-emerald-600"></i>
+                <span>Batch {{ bIdx + 1 }} {{ batch.status === 'ready' ? 'Ready' : '' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sticky Action Footer -->
+      <div
+        class="px-4 sm:px-6 py-3 bg-white/95 backdrop-blur-xl border-t border-slate-200 flex-shrink-0 space-y-2 shadow-lg"
+        style="padding-bottom: max(env(safe-area-inset-bottom, 24px), 14px);"
+      >
+        <div class="flex gap-2 w-full max-w-lg mx-auto">
+          <button
+            v-if="isOneTouchPreparing"
+            @click="handleCancelOneTouch"
+            class="w-1/3 py-3.5 bg-red-50 hover:bg-red-100 text-red-600 font-black rounded-2xl border border-red-200 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+          >
+            <i class="fa-solid fa-xmark"></i> Cancel
+          </button>
+          <!-- Share Mode Dropdown -->
+          <div v-if="!isOneTouchPreparing" class="relative flex-shrink-0">
+            <select
+              v-model="oneTouchShareMode"
+              class="h-full pl-3 pr-8 py-3.5 rounded-2xl border-2 border-violet-300 bg-violet-50 text-violet-800 font-black text-xs appearance-none cursor-pointer focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all"
+            >
+              <option value="image">📸 Image</option>
+              <option value="pdf">📄 PDF</option>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-violet-400 pointer-events-none"></i>
+          </div>
+          <button
+            @click="prepareOneTouch"
+            :disabled="isOneTouchPreparing || selectedGroupsCount === 0"
+            class="py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black rounded-2xl shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 text-sm cursor-pointer flex-1"
+          >
+            <span v-if="isOneTouchPreparing" class="flex items-center gap-2">
+              <svg
+                class="animate-spin h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span>{{ oneTouchProgress || 'Preparing...' }}</span>
+            </span>
+            <span v-else class="flex flex-col items-center leading-tight">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-bolt"></i>
+                Start One Touch Share
+              </span>
+              <span class="text-[11px] font-bold opacity-80">({{ selectedGroupsCount }} Groups)</span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Batch Share Modal -->
+    <div
+      v-if="showBatchModal"
+      class="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm"
+    >
+      <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-6">
+        <div class="text-center space-y-2">
+          <div
+            class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <i class="fa-brands fa-whatsapp text-3xl text-green-600"></i>
+          </div>
+          <h3 class="text-xl font-black text-slate-800">
+            Share Batch {{ currentBatchIndex + 1 }} / {{ batchList.length }}
+          </h3>
+          <p class="text-slate-500 font-medium">
+            Sending {{ batchList[currentBatchIndex].length }} images in this batch.
+          </p>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+          <div
+            class="h-full bg-green-500 rounded-full transition-all duration-300"
+            :style="{ width: `${(currentBatchIndex / batchList.length) * 100}%` }"
+          ></div>
+        </div>
+
+        <button
+          @click="executeBatchShare"
+          class="w-full py-4 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-xl shadow-xl active:scale-[0.95] transition-all flex items-center justify-center gap-3 text-lg"
+        >
+          <span>Share Batch {{ currentBatchIndex + 1 }}</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+        <button
+          @click="
+            showBatchModal = false;
+            isSharing = false;
+          "
+          class="w-full py-3 text-slate-400 font-bold hover:text-slate-600"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import axios from 'axios';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+import { Share } from '@capacitor/share';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
+import { useBrandGroups } from '../composables/useBrandGroups';
+import { useStockData } from '../composables/useStockData';
+import { useAdmin } from '../composables/useAdmin';
+import { BRAND_LISTS } from '../utils/constants';
+import { fetchCachedImageAsBase64 } from '../utils/nativeCache';
+import { getOptimizedImageUrl, getCleanProductName, parseCatalogSpecs } from '../utils/formatters';
+import { generateBrandSummaryImage } from '../utils/generateBrandSummaryImage.js';
+import { isKidsProduct } from '../utils/kidsUtils.js';
+
+const baseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) ? import.meta.env.BASE_URL : '/';
+
+// Separator image: 'Old stock ends here / New stocks start'
+const OLD_STOCK_SEPARATOR_URL = 'https://res.cloudinary.com/dieqsg5tr/image/upload/v1790151882/e-sbe/Old_stock_ends_here_oc3rh7.png';
+
+const ONE_TOUCH_GROUPS = [
+  { label: 'New Arrival', isNewArrival: true, brands: [], icon: '✨', defaultMinQty: 1, newArrivalDays: 60 },
+  { label: 'Paragon', brands: ['Max', 'PARAGON GENTS', 'Escoute'], icon: '👞', defaultMinQty: 10 },
+  { label: 'Paragon Ladies', brands: ['PARAGON LADIES'], icon: '👠', defaultMinQty: 10 },
+  { label: 'Kids', isKids: true, brands: [], icon: '🧒', defaultMinQty: 10 },
+  { label: 'Eeken', brands: ['EEKEN'], icon: '🏃', defaultMinQty: 10 },
+  { label: 'Cubix', brands: ['CUBIX', 'CUBIX 2'], icon: '👟', defaultMinQty: 10 },
+  { label: 'Florex', brands: ['Florex (Swastik)'], icon: '🌸', defaultMinQty: 10 },
+  { label: 'Action', brands: ['ACTION'], icon: '⚡', defaultMinQty: 10 },
+  { label: 'Reliance', brands: ['RELIANCE FOOTWEAR'], icon: '🔷', defaultMinQty: 10 },
+  { label: 'Ajanta', brands: ['AJANTA'], icon: '👡', defaultMinQty: 10 },
+  {
+    label: 'General Box Packing',
+    brands: [...BRAND_LISTS.generalBoxPacking],
+    icon: '📥',
+    defaultMinQty: 10,
+  },
+  {
+    label: 'General Loose Packing',
+    brands: [...BRAND_LISTS.generalLoosePacking],
+    icon: '📦',
+    defaultMinQty: 10,
+  },
+  { label: 'P-Toes', brands: ['P-TOES'], icon: '🟠', defaultMinQty: 10 },
+  { label: 'Paralite', brands: ['PARALITE'], icon: '🔶', defaultMinQty: 10 },
+  {
+    label: 'Paragon Ladies 40% Discount',
+    brands: ['SOLEA DISC 40% OFFER'],
+    icon: '🏷️',
+    defaultMinQty: 10,
+  },
+  {
+    label: 'Paragon Gents 40% Discount',
+    brands: ['PARAGON GENTS 40%'],
+    icon: '🏷️',
+    defaultMinQty: 10,
+  },
+  { label: 'Socks', brands: ['Barun', 'Pareek Soucks', 'LEO'], icon: '🧦', defaultMinQty: 10 },
+];
+
+// State
+const { stockData, loadStockData, loading } = useStockData(ref(false)); // Reuse existing composable
+const selectedBrands = ref([]);
+const onlyWithPhotos = ref(true);
+const minQtyEnabled = ref(false);
+const minQty = ref(5);
+const pdfMode = ref('separate');
+const zipMode = ref('separate');
+const zipBatchMode = ref(false);
+const isGenerating = ref(false);
+const isPdfGenerating = ref(false);
+const isZipGenerating = ref(false);
+const isSharing = ref(false);
+
+// Batch Sharing State
+const showBatchModal = ref(false);
+const batchList = ref([]);
+const currentBatchIndex = ref(0);
+
+const { isAdmin, isSuperAdmin } = useAdmin();
+const route = useRoute();
+const router = useRouter();
+
+const showOneTouchModal = ref(false);
+
+onMounted(() => {
+  if (route.query.onetouch === 'true') {
+    showOneTouchModal.value = true;
+    
+    // Clean up URL without triggering a reload
+    router.replace({ path: '/pdf-gen' });
+  }
+});
+
+const oneTouchGroups = ref(
+  ONE_TOUCH_GROUPS.map((g) => ({
+    ...g,
+    enabled: true,
+    minQty: g.defaultMinQty,
+    maxQty: '',
+    activeBrands: [...g.brands],
+    newArrivalDays: g.newArrivalDays || 60,
+    showBrandPicker: false,
+    isExpanded: false,
+    status: 'idle',
+    batches: [],
+  }))
+);
+const oneTouchOnlyWithPhotos = ref(true);
+const oneTouchSortMode = ref('default'); // 'default', 'qtyDesc', 'newest'
+const oneTouchShareMode = ref('image'); // 'image' (default) or 'pdf'
+const oneTouchMinQtyEnabled = ref(true);
+const oneTouchLowStockMode = ref(false);
+const isOneTouchSharing = ref(false);
+const isOneTouchPreparing = ref(false);
+const cancelOneTouch = ref(false);
+
+// Watch low stock mode toggle and update all groups
+watch(oneTouchLowStockMode, (isLowStock) => {
+  oneTouchGroups.value.forEach((group) => {
+    if (isLowStock) {
+      group.minQty = 1;
+      group.maxQty = '10';
+    } else {
+      group.minQty = 10;
+      group.maxQty = '';
+    }
+  });
+});
+
+const isAllOneTouchGroupsSelected = computed(() => {
+  if (!oneTouchGroups.value || oneTouchGroups.value.length === 0) return true;
+  return oneTouchGroups.value.every((g) => g.enabled);
+});
+
+const selectedGroupsCount = computed(() => {
+  if (!oneTouchGroups.value) return 0;
+  return oneTouchGroups.value.filter((g) => g.enabled).length;
+});
+
+const toggleSelectAllOneTouchGroups = () => {
+  const target = !isAllOneTouchGroupsSelected.value;
+  oneTouchGroups.value.forEach((g) => {
+    g.enabled = target;
+  });
+};
+
+const handleCloseOneTouch = () => {
+  if (route.query.onetouch === 'true') {
+    router.push('/home');
+  } else {
+    showOneTouchModal.value = false;
+  }
+};
+
+const parseMaxQty = (val) => {
+  if (val === '' || val === null || val === undefined) return Infinity;
+  const s = String(val).trim().toLowerCase();
+  if (s === '' || s === 'x' || s === '∞') return Infinity;
+  const n = parseInt(s, 10);
+  return isNaN(n) || n <= 0 ? Infinity : n;
+};
+
+const handleCancelOneTouch = () => {
+  cancelOneTouch.value = true;
+};
+
+const toggleSubBrand = (groupIdx, brand) => {
+  const group = oneTouchGroups.value[groupIdx];
+  const idx = group.activeBrands.indexOf(brand);
+  if (idx >= 0) {
+    // Don't allow unchecking the last brand
+    if (group.activeBrands.length > 1) {
+      group.activeBrands.splice(idx, 1);
+    }
+  } else {
+    group.activeBrands.push(brand);
+  }
+};
+const oneTouchCurrentGroup = ref('');
+const oneTouchGroupIndex = ref(0);
+const oneTouchTotalGroups = ref(0);
+const oneTouchProgress = ref('');
+const oneTouchCache = ref(JSON.parse(localStorage.getItem('sbe_onetouch_cache') || '{}'));
+watch(
+  oneTouchCache,
+  (newVal) => {
+    localStorage.setItem('sbe_onetouch_cache', JSON.stringify(newVal));
+  },
+  { deep: true }
+);
+
+const oneTouchElapsedTime = ref(0);
+let oneTouchTimerInterval = null;
+
+const formattedOneTouchTime = computed(() => {
+  const mins = Math.floor(oneTouchElapsedTime.value / 60);
+  const secs = oneTouchElapsedTime.value % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+});
+
+watch(
+  stockData,
+  () => {
+    oneTouchCache.value = {};
+  },
+  { deep: true }
+);
+
+const mobileTab = ref('brands');
+const currentBrand = ref('');
+const completedCount = ref(0);
+const showToast = ref(false);
+const toastMessage = ref('');
+
+// Computed: Brands list from stockData (for display/count if needed)
+const brands = computed(() => stockData.value.map((g) => g.groupName).sort());
+
+// Use brand groups composable
+const { groupedSidebar } = useBrandGroups(stockData, ref({}), ref(''));
+
+// Native app check
+const isNativeApp = computed(() => Capacitor.isNativePlatform());
+
+onMounted(async () => {
+  await loadStockData();
+
+  // Hardware Back Button Listener
+  App.addListener('backButton', ({ canGoBack }) => {
+    if (window.location.pathname === '/pdf-gen') {
+      window.history.back();
+    }
+  });
+});
+
+onBeforeUnmount(() => {
+  App.removeAllListeners();
+});
+
+// Methods
+const formatProductName = (name) => {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const getBrandLogo = (brandName) => {
+  const bUrl = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) ? import.meta.env.BASE_URL : '/';
+  const logos = {
+    Paragon: `${bUrl}assets/logos/paragon-transparent-logo.png`,
+    Reliance: `${bUrl}assets/logos/reliance-logo.png`,
+    Cubix: `${bUrl}assets/logos/cubix-logo.png`,
+    Florex: `${bUrl}assets/logos/florex-logo.png`,
+    ACTION: `${bUrl}assets/logos/action-logo.png`,
+    Eeken: `${bUrl}assets/logos/eeken-logo.png`,
+    Escoute: `${bUrl}assets/logos/escoute-logo.png`,
+    AJANTA: `${bUrl}assets/logos/ajanta-transparent-logo.png`,
+    Teuz: `${bUrl}assets/logos/teuz-logo.png`,
+    Paris: `${bUrl}assets/logos/paris-logo.jpg`,
+    Tara: `${bUrl}assets/logos/tara-logo.png`,
+    Brockkie: `${bUrl}assets/logos/brockkie-logo.png`,
+    Xpania: `${bUrl}assets/logos/xpania-logo.png`,
+  };
+  // Fuzzy match logic
+  const lowerName = brandName.toLowerCase();
+  const key = Object.keys(logos).find((k) => lowerName.includes(k.toLowerCase()));
+  return key ? logos[key] : null;
+};
+
+const toggleBrand = (brandName) => {
+  if (selectedBrands.value.includes(brandName)) {
+    selectedBrands.value = selectedBrands.value.filter((b) => b !== brandName);
+  } else {
+    selectedBrands.value.push(brandName);
+  }
+};
+
+const isCategorySelected = (category) => {
+  const group = groupedSidebar.value[category];
+  if (!group || group.length === 0) return false;
+
+  return group.every((item) => {
+    // Only topBrands uses { group: { groupName }, logo } structure
+    const name = category === 'topBrands' ? item.group.groupName : item.groupName;
+    return selectedBrands.value.includes(name);
+  });
+};
+
+const toggleCategory = (category, event) => {
+  const isChecked = event.target.checked;
+  const group = groupedSidebar.value[category];
+
+  if (!group) return;
+
+  group.forEach((item) => {
+    // Only topBrands uses { group: { groupName }, logo } structure
+    const name = category === 'topBrands' ? item.group.groupName : item.groupName;
+    if (isChecked) {
+      if (!selectedBrands.value.includes(name)) selectedBrands.value.push(name);
+    } else {
+      selectedBrands.value = selectedBrands.value.filter((b) => b !== name);
+    }
+  });
+};
+
+const scrollToGenerate = () => {
+  nextTick(() => {
+    generateSection.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+};
+
+// --- PDF GENERATION LOGIC (Frontend Only) ---
+const generatePdfBlob = async (targetBrands) => {
+  const data = stockData.value;
+  const filteredGroups = data.filter((group) => targetBrands.includes(group.groupName));
+
+  const { jsPDF } = await import('jspdf');
+  const { clashDisplayBoldBase64 } = await import('../utils/fonts.js');
+
+  const PAGE_W = 1080;
+  const PAGE_H = 2400;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: [PAGE_W, PAGE_H] });
+
+  // Add custom font
+  doc.addFileToVFS('ClashDisplay-Bold.ttf', clashDisplayBoldBase64);
+  doc.addFont('ClashDisplay-Bold.ttf', 'Clash Display', 'bold');
+
+  let hasAddedPage = false;
+  const dateStr = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+
+  for (const group of filteredGroups) {
+    for (const product of group.products) {
+      if (onlyWithPhotos.value && !product.imageUrl) continue;
+      if (minQtyEnabled.value && product.quantity <= minQty.value) continue;
+
+      if (hasAddedPage) {
+        doc.addPage([PAGE_W, PAGE_H]);
+      }
+      hasAddedPage = true;
+
+      doc.setFillColor('#000000');
+      doc.rect(0, 0, PAGE_W, PAGE_H, 'F');
+
+      if (product.imageUrl) {
+        try {
+          const imgData = await fetchImageAsBase64(product.imageUrl, product.productName);
+          const dims = await getImageDimensions(imgData);
+
+          const finalWidth = PAGE_W;
+          const finalHeight = dims.height * (PAGE_W / dims.width);
+          const x = 0;
+          const y = (PAGE_H - finalHeight) / 2;
+
+          doc.addImage(imgData, 'JPEG', x, y, finalWidth, finalHeight);
+        } catch (imgErr) {
+          doc.setTextColor(255);
+          doc.setFont('Clash Display', 'bold');
+          doc.setFontSize(24);
+          doc.text('Image Load Failed', PAGE_W / 2, PAGE_H / 2, { align: 'center' });
+        }
+      } else {
+        doc.setTextColor(255);
+        doc.setFont('Clash Display', 'bold');
+        doc.setFontSize(36);
+        doc.text('No Photo Available', PAGE_W / 2, PAGE_H / 2, { align: 'center' });
+      }
+
+      // HEADER
+      doc.setTextColor(180, 180, 180);
+      doc.setFont('Clash Display', 'bold');
+      doc.setFontSize(38);
+      doc.text(dateStr, 50, 80, { align: 'left' });
+      doc.text(group.groupName, PAGE_W - 50, 80, { align: 'right' });
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(90);
+      doc.text('SBE Rayagada', PAGE_W / 2, 200, { align: 'center' });
+
+      // FOOTER
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('Clash Display', 'bold');
+      let articleFontSize = 32;
+      doc.setFontSize(articleFontSize);
+      const maxTextWidth = PAGE_W - 120;
+      const textWidth = doc.getTextWidth(product.productName);
+      if (textWidth > maxTextWidth) {
+        articleFontSize = Math.max(20, Math.floor(articleFontSize * (maxTextWidth / textWidth)));
+        doc.setFontSize(articleFontSize);
+      }
+      doc.text(product.productName, PAGE_W / 2, PAGE_H - 160, { align: 'center', maxWidth: maxTextWidth });
+
+      doc.setTextColor(255, 215, 0); // Muted gold
+      doc.setFontSize(54);
+      doc.text(`Qty: ${product.quantity}`, PAGE_W / 2, PAGE_H - 80, { align: 'center' });
+    }
+  }
+  return doc.output('blob');
+};
+
+const fetchImageAsBase64 = async (url, productName = '') => {
+  try {
+    const cached = await fetchCachedImageAsBase64(url, productName);
+    if (cached) return cached;
+  } catch (e) {}
+
+  const targetUrl = getOptimizedImageUrl(url, 1200) || url;
+  const res = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+  const base64 = btoa(
+    new Uint8Array(res.data).reduce((data, byte) => data + String.fromCharCode(byte), '')
+  );
+  return `data:${res.headers['content-type'] || 'image/jpeg'};base64,${base64}`;
+};
+
+const getImageDimensions = async (base64) => {
+  return new Promise((resolve) => {
+    const i = new Image();
+    i.onload = () => resolve({ width: i.width, height: i.height });
+    i.src = base64;
+  });
+};
+
+const generatePdf = async () => {
+  if (!selectedBrands.value.length) {
+    showToast.value = true;
+    toastMessage.value = 'Select at least one brand first';
+    setTimeout(() => (showToast.value = false), 3000);
+    return;
+  }
+
+  isGenerating.value = true;
+  isPdfGenerating.value = true;
+  completedCount.value = 0;
+
+  if (pdfMode.value === 'combined') {
+    // COMBINED PDF
+    currentBrand.value = 'Merging All Brands...';
+
+    try {
+      const blob = await generatePdfBlob(selectedBrands.value);
+
+      const today = new Date().toISOString().split('T')[0];
+      const filename = `CATALOG_COMBINED_${today}.pdf`;
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      completedCount.value = selectedBrands.value.length;
+      showToast.value = true;
+      toastMessage.value = 'Combined PDF downloaded!';
+      setTimeout(() => (showToast.value = false), 4000);
+    } catch (err) {
+      console.error(err);
+      showToast.value = true;
+      toastMessage.value = 'Failed to generate combined PDF';
+      setTimeout(() => (showToast.value = false), 5000);
+    } finally {
+      isGenerating.value = false;
+      isPdfGenerating.value = false;
+      currentBrand.value = '';
+    }
+  } else {
+    // SEPARATE PDFs
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const brand of selectedBrands.value) {
+      currentBrand.value = `Generating ${brand}...`;
+
+      try {
+        const blob = await generatePdfBlob([brand]);
+
+        const today = new Date().toISOString().split('T')[0];
+        const safe = brand.replace(/[^a-zA-Z0-9]/g, '_');
+        const filename = `${safe}_${today}.pdf`;
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+        successCount++;
+      } catch (e) {
+        console.error(`Failed ${brand}`, e);
+        failCount++;
+      }
+      completedCount.value++;
+      await new Promise((r) => setTimeout(r, 500)); // Sleep briefly to not freeze UI
+    }
+
+    showToast.value = true;
+    toastMessage.value = `Done! ${successCount} Success, ${failCount} Failed`;
+    setTimeout(() => (showToast.value = false), 4000);
+
+    isGenerating.value = false;
+    isPdfGenerating.value = false;
+    currentBrand.value = '';
+  }
+};
+
+// Helper: Fetch separator image and return as blob
+const fetchSeparatorBlob = async () => {
+  try {
+    const res = await axios.get(OLD_STOCK_SEPARATOR_URL, { responseType: 'arraybuffer' });
+    return new Blob([res.data], { type: res.headers['content-type'] || 'image/png' });
+  } catch (e) {
+    console.error('Failed to fetch separator image:', e);
+    return null;
+  }
+};
+
+const downloadAsImages = async () => {
+  if (!selectedBrands.value.length) return;
+
+  isGenerating.value = true;
+  isPdfGenerating.value = false;
+  isZipGenerating.value = false; // Just to be safe
+  completedCount.value = 0;
+  let totalSuccess = 0;
+  let totalFailed = 0;
+  let totalImages = 0;
+
+  const pdfjsLib = await import('pdfjs-dist');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+  for (const brand of selectedBrands.value) {
+    currentBrand.value = `Processing: ${brand}`;
+    try {
+      // Generate and download dynamic brand summary cover as the first image
+      try {
+        const brandGroup = stockData.value?.find((g) => g.groupName.toLowerCase() === brand.toLowerCase());
+        const brandProducts = (brandGroup?.products || []).filter((p) => {
+          if (onlyWithPhotos.value && !p.imageUrl && !p.secondaryImageUrl) return false;
+          if (minQtyEnabled.value && p.quantity < minQty.value) return false;
+          return true;
+        });
+
+        const summaryImg = await generateBrandSummaryImage({
+          groupLabel: brand,
+          products: brandProducts.length > 0 ? brandProducts : (brandGroup?.products || []),
+        });
+
+        if (summaryImg && summaryImg.blob) {
+          const sepUrl = URL.createObjectURL(summaryImg.blob);
+          const sepA = document.createElement('a');
+          sepA.href = sepUrl;
+          sepA.download = `${brand.replace(/[^a-zA-Z0-9]/g, '_')}_000_Brand_Summary.jpg`;
+          sepA.click();
+          URL.revokeObjectURL(sepUrl);
+          totalImages++;
+        }
+      } catch (sepErr) {
+        console.error('Failed to generate summary cover for download:', sepErr);
+      }
+
+      const pdfBlob = await generatePdfBlob([brand]);
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      const loadingTask = pdfjsLib.getDocument(pdfUrl);
+      const pdf = await loadingTask.promise;
+
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 2.5 });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const context = canvas.getContext('2d');
+
+        await page.render({ canvasContext: context, viewport }).promise;
+
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.95));
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${brand.replace(/[^a-zA-Z0-9]/g, '_')}_Image_${String(pageNum).padStart(3, '0')}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        totalImages++;
+      }
+
+      URL.revokeObjectURL(pdfUrl);
+      totalSuccess++;
+    } catch (err) {
+      console.error('Failed for brand:', brand, err);
+      totalFailed++;
+    }
+    completedCount.value++;
+  }
+
+  isGenerating.value = false;
+  currentBrand.value = '';
+  showToast.value = true;
+  toastMessage.value = `Downloaded ${totalImages} images (${totalFailed} failed brands)`;
+  setTimeout(() => (showToast.value = false), 4000);
+};
+
+const downloadAsZip = async () => {
+  if (!selectedBrands.value.length) return;
+
+  isGenerating.value = true;
+  isZipGenerating.value = true;
+  completedCount.value = 0;
+  const zip = new JSZip();
+
+  const pdfjsLib = await import('pdfjs-dist');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+  let totalPages = 0;
+  let failedBrands = 0;
+  const isCombined = zipMode.value === 'combined';
+  let globalPageCounter = 0;
+
+  for (const brand of selectedBrands.value) {
+    currentBrand.value = `Zipping: ${brand}`;
+
+    try {
+      const blob = await generatePdfBlob([brand]);
+
+      const pdfUrl = URL.createObjectURL(blob);
+      const loadingTask = pdfjsLib.getDocument(pdfUrl);
+      const pdf = await loadingTask.promise;
+
+      const target = isCombined ? zip : zip.folder(brand);
+
+      // Add dynamic brand summary cover as first image for this brand
+      try {
+        const brandGroup = stockData.value?.find((g) => g.groupName.toLowerCase() === brand.toLowerCase());
+        const brandProducts = (brandGroup?.products || []).filter((p) => {
+          if (onlyWithPhotos.value && !p.imageUrl && !p.secondaryImageUrl) return false;
+          if (minQtyEnabled.value && p.quantity < minQty.value) return false;
+          return true;
+        });
+
+        const summaryImg = await generateBrandSummaryImage({
+          groupLabel: brand,
+          products: brandProducts.length > 0 ? brandProducts : (brandGroup?.products || []),
+        });
+
+        if (summaryImg && summaryImg.blob) {
+          if (isCombined) {
+            globalPageCounter++;
+            if (zipBatchMode.value) {
+              const batchNum = Math.ceil(globalPageCounter / 99);
+              const batchFolder = zip.folder(`Batch ${batchNum}`);
+              batchFolder.file('000_Brand_Summary.jpg', summaryImg.blob);
+            } else {
+              target.file(`000_Brand_Summary_${String(globalPageCounter).padStart(4, '0')}.jpg`, summaryImg.blob);
+            }
+          } else {
+            target.file('000_Brand_Summary.jpg', summaryImg.blob);
+          }
+          totalPages++;
+        }
+      } catch (zipErr) {
+        console.error('Failed to add dynamic summary cover to zip:', zipErr);
+      }
+
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        // Yield to main thread every 10 pages to allow GC
+        if (pageNum % 10 === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+
+        const page = await pdf.getPage(pageNum);
+        // Scale 1.0 is sufficient and prevents OOM crashes
+        const viewport = page.getViewport({ scale: 1.0 });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const context = canvas.getContext('2d');
+        await page.render({ canvasContext: context, viewport }).promise;
+
+        // Lower quality to 0.75
+        const imgBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.75));
+
+        // Memory Cleanup - CRITICAL for WebView/Browser stability!
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.width = 0;
+        canvas.height = 0;
+        page.cleanup();
+
+        if (isCombined) {
+          globalPageCounter++;
+          if (zipBatchMode.value) {
+            const batchNum = Math.ceil(globalPageCounter / 99);
+            const batchFolder = zip.folder(`Batch ${batchNum}`);
+            batchFolder.file(`${brand}_${String(globalPageCounter).padStart(4, '0')}.jpg`, imgBlob);
+          } else {
+            target.file(`${brand}_${String(globalPageCounter).padStart(4, '0')}.jpg`, imgBlob);
+          }
+        } else {
+          target.file(`${brand}_Page_${pageNum}.jpg`, imgBlob);
+        }
+        totalPages++;
+      }
+      URL.revokeObjectURL(pdfUrl);
+    } catch (e) {
+      console.error(`Failed to zip ${brand}`, e);
+      failedBrands++;
+      showToast.value = true;
+      toastMessage.value = `Failed to process ${brand}`;
+      setTimeout(() => (showToast.value = false), 2000);
+    }
+    completedCount.value++;
+  }
+
+  currentBrand.value = 'Finalizing ZIP file...';
+  const content = await zip.generateAsync({ type: 'blob' });
+  saveAs(content, `Catalog_Images_${new Date().toISOString().split('T')[0]}.zip`);
+
+  isGenerating.value = false;
+  isZipGenerating.value = false;
+  currentBrand.value = '';
+  showToast.value = true;
+  toastMessage.value = `ZIP Ready! ${totalPages} images included.`;
+  setTimeout(() => (showToast.value = false), 4000);
+};
+
+const shareViaNativeApp = async () => {
+  if (!selectedBrands.value.length) return;
+
+  isGenerating.value = true;
+  isSharing.value = true;
+  completedCount.value = 0;
+
+  try {
+    const pdfjsLib = await import('pdfjs-dist');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+    const fileUris = [];
+
+    // 1. Generate All Images & Save to Temp
+    for (const brand of selectedBrands.value) {
+      currentBrand.value = `Preparing: ${brand}`;
+      try {
+        const blob = await generatePdfBlob([brand]);
+        const pdfUrl = URL.createObjectURL(blob);
+        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        const pdf = await loadingTask.promise;
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          // Yield to main thread every 10 pages to allow GC
+          if (pageNum % 10 === 0) {
+            await new Promise((resolve) => setTimeout(resolve, 20));
+          }
+
+          const page = await pdf.getPage(pageNum);
+          // Scale 1.0 is sufficient for 1080x2400 and prevents OOM crashes
+          const viewport = page.getViewport({ scale: 1.0 });
+
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const context = canvas.getContext('2d');
+          await page.render({ canvasContext: context, viewport }).promise;
+
+          // Convert to Base64 (lower quality to 0.75 for smaller bridge payload)
+          const base64 = canvas.toDataURL('image/jpeg', 0.75).split(',')[1];
+          const fileName = `${brand.replace(/[^a-zA-Z0-9]/g, '')}_${pageNum}.jpg`;
+
+          // Memory Cleanup - CRITICAL for WebView stability!
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          canvas.width = 0;
+          canvas.height = 0;
+          page.cleanup();
+
+          // Save to Cache Directory
+          const savedFile = await Filesystem.writeFile({
+            path: fileName,
+            data: base64,
+            directory: Directory.Cache,
+          });
+
+          fileUris.push(savedFile.uri);
+        }
+        URL.revokeObjectURL(pdfUrl);
+      } catch (e) {
+        console.error('Native Gen Error', e);
+      }
+      completedCount.value++;
+    }
+
+    // Prepend Dynamic Brand Summary Cover as first image
+    try {
+      const shareProducts = (stockData.value || [])
+        .filter((g) => selectedBrands.value.some((tb) => tb.toLowerCase() === g.groupName.toLowerCase()))
+        .flatMap((g) => g.products || [])
+        .filter((p) => {
+          if (onlyWithPhotos.value && !p.imageUrl && !p.secondaryImageUrl) return false;
+          if (minQtyEnabled.value && p.quantity < minQty.value) return false;
+          return true;
+        });
+
+      const summaryImg = await generateBrandSummaryImage({
+        groupLabel: selectedBrands.value.length === 1 ? selectedBrands.value[0] : 'Footwear Catalog',
+        subBrands: selectedBrands.value,
+        products: shareProducts,
+      });
+
+      if (summaryImg && summaryImg.base64) {
+        const saved = await Filesystem.writeFile({
+          path: 'share_000_summary.jpg',
+          data: summaryImg.base64,
+          directory: Directory.Cache,
+        });
+        fileUris.unshift(saved.uri);
+      }
+    } catch (e) {
+      console.error('Failed to prepend dynamic summary cover:', e);
+    }
+
+    // 2. Chunking Logic (Max 99 per batch to stay under WhatsApp 100 limit)
+    const chunkSize = 99;
+    const batches = [];
+    for (let i = 0; i < fileUris.length; i += chunkSize) {
+      batches.push(fileUris.slice(i, i + chunkSize));
+    }
+
+    if (batches.length === 0) {
+      showToast.value = true;
+      toastMessage.value = 'No images generated';
+      setTimeout(() => (showToast.value = false), 3000);
+      isSharing.value = false;
+      isGenerating.value = false;
+      return;
+    }
+
+    // 3. Decide: Direct Share or Batch Mode
+    if (batches.length === 1) {
+      await Share.share({ files: batches[0] });
+      isSharing.value = false;
+      isGenerating.value = false;
+    } else {
+      batchList.value = batches;
+      currentBatchIndex.value = 0;
+      showBatchModal.value = true;
+      // Don't turn off isGenerating yet, modal handles it
+    }
+  } catch (err) {
+    console.error('Native Share Failed', err);
+    showToast.value = true;
+    toastMessage.value = 'Sharing cancelled or failed.';
+    setTimeout(() => (showToast.value = false), 3000);
+    isGenerating.value = false;
+    isSharing.value = false;
+  } finally {
+    currentBrand.value = '';
+  }
+};
+
+const executeBatchShare = async () => {
+  try {
+    const currentFiles = batchList.value[currentBatchIndex.value];
+    await Share.share({ files: currentFiles });
+
+    // Move to next batch
+    currentBatchIndex.value++;
+
+    // Check if done
+    if (currentBatchIndex.value >= batchList.value.length) {
+      showBatchModal.value = false;
+      isGenerating.value = false;
+      isSharing.value = false;
+      showToast.value = true;
+      toastMessage.value = 'All batches shared successfully!';
+      setTimeout(() => (showToast.value = false), 4000);
+    }
+  } catch (e) {
+    console.error(e);
+    // Don't advance index if failed, let them retry
+  }
+};
+
+// Add missing ref for template
+const generateSection = ref(null);
+
+const openOneTouchModal = () => {
+  showOneTouchModal.value = true;
+};
+
+// --- PDF Mode: Generate a single multi-page PDF with sleek sides and royal cover page ---
+const generateOneTouchPdfBlob = async (targetBrands, onlyWithPhotosFlag, minQtyValue, maxQtyValue, groupLabel = '', isKids = false) => {
+  const data = stockData.value;
+  let targetProducts = [];
+
+  if (isKids || groupLabel === 'Kids') {
+    for (const group of data) {
+      if (group.groupName === '_META_DATA_' || !group.products) continue;
+      for (const product of group.products) {
+        if (!isKidsProduct(product.productName, group.groupName)) continue;
+        const activeImg = product.imageUrl || product.secondaryImageUrl;
+        if (onlyWithPhotosFlag && !activeImg) continue;
+        if (product.quantity < minQtyValue) continue;
+        if (maxQtyValue > 0 && product.quantity > maxQtyValue) continue;
+        targetProducts.push({ product, group });
+      }
+    }
+  } else {
+    const filteredGroups = data.filter((group) => {
+      return targetBrands.some((tb) => tb.toLowerCase() === group.groupName.toLowerCase());
+    });
+    if (filteredGroups.length === 0) return { blob: null, pageCount: 0 };
+    for (const group of filteredGroups) {
+      for (const product of group.products) {
+        const activeImg = product.imageUrl || product.secondaryImageUrl;
+        if (onlyWithPhotosFlag && !activeImg) continue;
+        if (product.quantity < minQtyValue) continue;
+        if (maxQtyValue > 0 && product.quantity > maxQtyValue) continue;
+        targetProducts.push({ product, group });
+      }
+    }
+  }
+
+  if (targetProducts.length === 0) return { blob: null, pageCount: 0 };
+
+  const { jsPDF } = await import('jspdf');
+  const { clashDisplayBoldBase64 } = await import('../utils/fonts.js');
+
+  const PAGE_W = 1200; // width in portrait
+  const PAGE_H = 1600; // height in portrait
+  const BAR_W = 140;   // sleek black sidebar width
+  const IMG_AREA_W = PAGE_W - (BAR_W * 2); // 920pt center image area
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: [PAGE_W, PAGE_H] });
+
+  doc.addFileToVFS('ClashDisplay-Bold.ttf', clashDisplayBoldBase64);
+  doc.addFont('ClashDisplay-Bold.ttf', 'Clash Display', 'bold');
+  doc.setFont('Clash Display', 'bold');
+
+  let hasAddedPage = false;
+  let pageCount = 0;
+  const dateStr = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+
+  // Page 1: Royal White-Gold Minimalist Cover Page
+  try {
+    const summaryImg = await generateBrandSummaryImage({
+      groupLabel: groupLabel || (targetBrands.length === 1 ? targetBrands[0] : 'Footwear Catalog'),
+      subBrands: targetBrands,
+      products: targetProducts.map((t) => t.product),
+    });
+
+    if (summaryImg && summaryImg.dataUrl) {
+      doc.setFillColor(252, 252, 250);
+      doc.rect(0, 0, PAGE_W, PAGE_H, 'F');
+      const coverW = 1080;
+      const coverX = Math.max(0, (PAGE_W - coverW) / 2);
+      doc.addImage(summaryImg.dataUrl, 'JPEG', coverX, 0, coverW, PAGE_H);
+      hasAddedPage = true;
+      pageCount++;
+    }
+  } catch (covErr) {
+    console.warn('Cover page error for One Touch PDF:', covErr);
+  }
+
+  for (const { product, group } of targetProducts) {
+
+      if (hasAddedPage) {
+        doc.addPage([PAGE_W, PAGE_H]);
+      }
+      hasAddedPage = true;
+      pageCount++;
+
+      // Seamless clean white background (no top/bottom black bars)
+      doc.setFillColor(255, 255, 255);
+      doc.rect(0, 0, PAGE_W, PAGE_H, 'F');
+
+      // LEFT sleek dark bar
+      doc.setFillColor(15, 23, 42); // slate-900
+      doc.rect(0, 0, BAR_W, PAGE_H, 'F');
+
+      // RIGHT sleek dark bar
+      doc.rect(PAGE_W - BAR_W, 0, BAR_W, PAGE_H, 'F');
+
+      // --- CENTER: Product Image ---
+      if (activeImg) {
+        try {
+          const imgData = await fetchImageAsBase64(activeImg, product.productName);
+          const dims = await getImageDimensions(imgData);
+
+          const scaleW = IMG_AREA_W / dims.width;
+          const scaleH = PAGE_H / dims.height;
+          const scale = Math.min(scaleW, scaleH);
+          const finalWidth = dims.width * scale;
+          const finalHeight = dims.height * scale;
+          const x = BAR_W + (IMG_AREA_W - finalWidth) / 2;
+          const y = (PAGE_H - finalHeight) / 2;
+
+          doc.addImage(imgData, 'JPEG', x, y, finalWidth, finalHeight);
+        } catch (imgErr) {
+          doc.setTextColor(148, 163, 184);
+          doc.setFontSize(22);
+          doc.text('Image Load Failed', PAGE_W / 2, PAGE_H / 2, { align: 'center' });
+        }
+      } else {
+        doc.setTextColor(148, 163, 184);
+        doc.setFontSize(28);
+        doc.text('No Photo Available', PAGE_W / 2, PAGE_H / 2, { align: 'center' });
+      }
+
+      // --- LEFT BAR: Vertical branding text (reads straight when tilted 90° clockwise) ---
+      doc.setFont('Clash Display', 'bold');
+      const leftX1 = BAR_W * 0.42;
+      const leftX2 = BAR_W * 0.75;
+
+      // Store Title
+      doc.setFontSize(22);
+      doc.setTextColor(255, 255, 255);
+      doc.text('SRI BRUNDABANA ENTERPRISES', leftX1, PAGE_H - 80, { angle: 90 });
+
+      // Store City Subtitle
+      doc.setFontSize(14);
+      doc.setTextColor(148, 163, 184);
+      doc.text('RAYAGADA', leftX2, PAGE_H - 80, { angle: 90 });
+
+      // Brand Name at right end when tilted
+      doc.setFontSize(20);
+      doc.setTextColor(251, 191, 36); // warm gold
+      doc.text(group.groupName.toUpperCase(), leftX1, 80, { angle: 90, align: 'right' });
+
+      // Date at right end when tilted
+      doc.setFontSize(13);
+      doc.setTextColor(148, 163, 184);
+      doc.text(dateStr.toUpperCase(), leftX2, 80, { angle: 90, align: 'right' });
+
+      // --- RIGHT BAR: Structured article details stacked vertically ---
+      const specs = parseCatalogSpecs(product.productName, group.groupName);
+      const fields = [];
+      fields.push({
+        label: 'ARTICLE',
+        val: specs.article || product.productName.toUpperCase(),
+        color: [255, 255, 255],
+        size: 19,
+      });
+      if (specs.color && specs.color.text) {
+        fields.push({
+          label: 'COLOR',
+          val: specs.color.text.toUpperCase(),
+          color: [226, 232, 240],
+          size: 15,
+        });
+      }
+      if (specs.size) {
+        fields.push({
+          label: 'SIZE',
+          val: specs.size,
+          color: [226, 232, 240],
+          size: 15,
+        });
+      }
+      if (specs.mrp) {
+        fields.push({
+          label: 'MRP',
+          val: `₹${specs.mrp}`,
+          color: [226, 232, 240],
+          size: 15,
+        });
+      }
+      fields.push({
+        label: 'QTY',
+        val: `${product.quantity} PAIRS`,
+        color: [251, 191, 36],
+        size: 18,
+      });
+
+      const startX = PAGE_W - BAR_W + 24;
+      const rowStep = Math.min(22, Math.floor((BAR_W - 32) / fields.length));
+
+      fields.forEach((f, idx) => {
+        const currentX = startX + (idx * rowStep);
+
+        // Field Label (smaller, muted slate)
+        doc.setFontSize(10);
+        doc.setTextColor(148, 163, 184);
+        doc.text(f.label, currentX, PAGE_H - 80, { angle: 90 });
+
+        // Field Value (bold, bright)
+        let valSize = f.size;
+        doc.setFontSize(valSize);
+        const maxTextW = 850;
+        const textW = doc.getTextWidth(f.val);
+        if (textW > maxTextW) {
+          valSize = Math.max(12, Math.floor(valSize * (maxTextW / textW)));
+          doc.setFontSize(valSize);
+        }
+        doc.setTextColor(f.color[0], f.color[1], f.color[2]);
+        doc.text(f.val, currentX, PAGE_H - 180, { angle: 90 });
+      });
+
+      // Right-aligned Big Stock Quantity summary on the right side of the bottom bar
+      const qtyX1 = startX + (1.5 * rowStep);
+      const qtyX2 = startX + (3.2 * rowStep);
+      doc.setFontSize(11);
+      doc.setTextColor(148, 163, 184);
+      doc.text('STOCK QUANTITY', qtyX1, 80, { angle: 90, align: 'right' });
+      doc.setFontSize(26);
+      doc.setTextColor(251, 191, 36);
+      doc.text(`${product.quantity} PAIRS`, qtyX2, 80, { angle: 90, align: 'right' });
+    }
+    return { blob: hasAddedPage ? doc.output('blob') : null, pageCount };
+  };
+
+let clashFontReady = false;
+const ensureClashFont = async () => {
+  if (clashFontReady) return;
+  try {
+    if (typeof document !== 'undefined' && document.fonts && document.fonts.check('bold 16px "Clash Display"')) {
+      clashFontReady = true;
+      return;
+    }
+    const { clashDisplayBoldBase64 } = await import('../utils/fonts.js');
+    if (clashDisplayBoldBase64 && typeof FontFace !== 'undefined' && typeof document !== 'undefined') {
+      const font = new FontFace('Clash Display', `url(data:font/ttf;base64,${clashDisplayBoldBase64})`, { weight: 'bold' });
+      await font.load();
+      document.fonts.add(font);
+      clashFontReady = true;
+    }
+  } catch (e) {
+    console.warn('[OneTouch] Font load fallback:', e);
+  }
+};
+
+const loadProductImageElement = async (product) => {
+  const activeImg = product.imageUrl || product.secondaryImageUrl;
+  if (!activeImg) return null;
+
+  // 1. Try local native filesystem cache first (0ms instant)
+  let imgSource = null;
+  try {
+    imgSource = await fetchCachedImageAsBase64(activeImg, product.productName);
+  } catch (e) {}
+
+  // 2. If still not in local cache, fetch optimized URL (w=800 for high quality yet fast load)
+  if (!imgSource) {
+    const fetchUrl = activeImg;
+    // Normal URL: fetch with 4s timeout
+      try {
+        const targetUrl = getOptimizedImageUrl(fetchUrl, 800) || fetchUrl;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const resp = await fetch(targetUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (resp.ok) {
+          const blob = await resp.blob();
+          imgSource = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        }
+      } catch (fetchErr) {
+        // Fallback to axios if CORS or stream issue
+        try {
+          const targetUrl = getOptimizedImageUrl(fetchUrl, 800) || fetchUrl;
+          const res = await axios.get(targetUrl, { responseType: 'arraybuffer', timeout: 3500 });
+          const base64 = btoa(new Uint8Array(res.data).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+          imgSource = `data:${res.headers['content-type'] || 'image/jpeg'};base64,${base64}`;
+        } catch (_) {
+          return null;
+        }
+    }
+  }
+
+  if (!imgSource) return null;
+
+  // Convert Base64 / Data URL to HTMLImageElement
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = imgSource;
+  });
+};
+
+const renderProductShareImageDirect = (product, group, dateStr, imgElement) => {
+  const PAGE_W = 1080;
+  const BAR_H = 135;
+  const MAX_PHOTO_H = 1920; // Full 9:16 vertical standard (1080x1920)
+
+  let finalHeight = 1080; // default square
+  let drawW = PAGE_W;
+  let drawH = 1080;
+  let drawX = 0;
+  let drawY = 0;
+  const hasValidImg = Boolean(imgElement && imgElement.naturalWidth > 0 && imgElement.naturalHeight > 0);
+
+  if (hasValidImg) {
+    const naturalScaledH = Math.round(imgElement.naturalHeight * (PAGE_W / imgElement.naturalWidth));
+    if (naturalScaledH > MAX_PHOTO_H) {
+      // For ultra-tall photos (> 9:16), cap photo area height to 1920px and scale proportionally (never squeeze!)
+      finalHeight = MAX_PHOTO_H;
+      const scale = MAX_PHOTO_H / imgElement.naturalHeight;
+      drawW = Math.round(imgElement.naturalWidth * scale);
+      drawH = MAX_PHOTO_H;
+      drawX = Math.round((PAGE_W - drawW) / 2);
+      drawY = 0;
+    } else {
+      // Natural 100% true-to-life aspect ratio edge-to-edge
+      finalHeight = Math.max(400, naturalScaledH);
+      drawW = PAGE_W;
+      drawH = naturalScaledH;
+      drawX = 0;
+      drawY = Math.round((finalHeight - drawH) / 2);
+    }
+  }
+
+  const PAGE_H = finalHeight + BAR_H;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = PAGE_W;
+  canvas.height = PAGE_H;
+  const ctx = canvas.getContext('2d');
+
+  // Background: Pure Black
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, PAGE_W, PAGE_H);
+
+  // 1. Draw Photo or Clean Fallback
+  if (hasValidImg) {
+    ctx.drawImage(imgElement, drawX, drawY, drawW, drawH);
+  } else {
+    ctx.fillStyle = '#0f172a'; // slate-900
+    ctx.fillRect(0, 0, PAGE_W, finalHeight);
+
+    ctx.fillStyle = '#94a3b8'; // slate-400
+    ctx.font = 'bold 36px "Clash Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('No Photo Available', PAGE_W / 2, finalHeight / 2);
+  }
+
+  // 2. Draw Bottom Extension Bar
+  ctx.fillStyle = '#050505';
+  ctx.fillRect(0, finalHeight, PAGE_W, BAR_H);
+
+  // Divider Line: Warm Gold
+  ctx.strokeStyle = '#FBBF24';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, finalHeight);
+  ctx.lineTo(PAGE_W, finalHeight);
+  ctx.stroke();
+
+  // 3. Extract Specs
+  const specs = parseCatalogSpecs(product.productName, group?.groupName || '');
+  let articleName = specs.article || getCleanProductName(product.productName) || product.productName;
+  let sizeVal = specs.size;
+  let colorVal = (specs.color && (specs.color.label || specs.color.text)) || '';
+  let mrpVal = specs.mrp;
+
+  const activeImgUrl = product.imageUrl || product.secondaryImageUrl;
+  if (activeImgUrl) {
+    try {
+      const urlClean = decodeURIComponent(activeImgUrl).split('?')[0];
+      const fn = urlClean.substring(urlClean.lastIndexOf('/') + 1);
+      const m = fn.match(/^([A-Za-z0-9\-]+)_([A-Za-z0-9\-]+)_([0-9XA-Za-z\-]+)_(?:MRP|RS)([0-9\-]+)/i);
+      if (m) {
+        if (!colorVal || colorVal === 'MULTI') colorVal = m[2].replace(/-/g, ' ');
+        if (!sizeVal) sizeVal = m[3].replace(/-/g, ' ');
+        if (!mrpVal) mrpVal = m[4];
+      }
+    } catch (_) {}
+  }
+
+  if (!sizeVal) {
+    const sm = product.productName.match(/(?:^|[\s\(])(\d{1,2}\s*[\*\-xX\/]\s*\d{1,2})(?:[\s\)]|$)/);
+    if (sm) sizeVal = sm[1].replace('*', 'X').replace(/\s+/g, '');
+  }
+
+  articleName = (articleName || product.productName).toUpperCase().trim();
+  if (sizeVal) sizeVal = sizeVal.toUpperCase().trim();
+  if (colorVal) colorVal = colorVal.toUpperCase().trim();
+
+  const padX = 36;
+  const rightX = PAGE_W - padX;
+
+  // ROW 1: ITEM NAME (left) & QTY (right)
+  const row1Y = finalHeight + 52;
+  const qtyStr = `QTY: ${product.quantity} ${Number(product.quantity) === 1 ? 'PAIR' : 'PAIRS'}`;
+
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#FBBF24'; // warm gold
+  ctx.font = 'bold 30px "Clash Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText(qtyStr, rightX, row1Y);
+  const qtyWidth = ctx.measureText(qtyStr).width;
+
+  const maxItemW = PAGE_W - padX * 2 - qtyWidth - 30;
+  let itemFontSize = 32;
+  ctx.font = `bold ${itemFontSize}px "Clash Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  let itemTextW = ctx.measureText(articleName).width;
+  if (itemTextW > maxItemW) {
+    itemFontSize = Math.max(20, Math.floor(itemFontSize * (maxItemW / itemTextW)));
+    ctx.font = `bold ${itemFontSize}px "Clash Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  }
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(articleName, padX, row1Y);
+
+  // ROW 2: SPECS (SIZE, COLOR, MRP) (left) & DATE (right)
+  const row2Y = finalHeight + 102;
+  const dateTag = `DATE: ${dateStr}`;
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#94A3B8'; // slate-400
+  ctx.font = 'bold 18px "Clash Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText(dateTag, rightX, row2Y);
+  const dateWidth = ctx.measureText(dateTag).width;
+
+  const specItems = [];
+  if (sizeVal) specItems.push(`SIZE: ${sizeVal}`);
+  if (colorVal) specItems.push(`COLOR: ${colorVal}`);
+  if (mrpVal) specItems.push(`MRP: ${mrpVal}`);
+  const specsStr = specItems.join('   •   ');
+
+  if (specsStr) {
+    const maxSpecsW = PAGE_W - padX * 2 - dateWidth - 30;
+    let specsFontSize = 20;
+    ctx.font = `bold ${specsFontSize}px "Clash Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    const specsTextW = ctx.measureText(specsStr).width;
+    if (specsTextW > maxSpecsW) {
+      specsFontSize = Math.max(14, Math.floor(specsFontSize * (maxSpecsW / specsTextW)));
+      ctx.font = `bold ${specsFontSize}px "Clash Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    }
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#E2E8F0'; // slate-200
+    ctx.fillText(specsStr, padX, row2Y);
+  }
+
+  // Export Base64 JPEG at 0.88 quality (crisp HD yet fast and lightweight)
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+  const b64 = dataUrl.split(',')[1];
+
+  // Immediate Memory Cleanup
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  canvas.width = 0;
+  canvas.height = 0;
+
+  return b64;
+};
+
+const prepareOneTouch = async () => {
+  const checkedGroups = oneTouchGroups.value.filter((g) => g.enabled);
+  if (checkedGroups.length === 0) {
+    showToast.value = true;
+    toastMessage.value = 'Select at least one group';
+    setTimeout(() => (showToast.value = false), 3000);
+    return;
+  }
+
+  isOneTouchPreparing.value = true;
+  isGenerating.value = true;
+  cancelOneTouch.value = false;
+
+  oneTouchElapsedTime.value = 0;
+  if (oneTouchTimerInterval) clearInterval(oneTouchTimerInterval);
+  oneTouchTimerInterval = setInterval(() => {
+    oneTouchElapsedTime.value++;
+  }, 1000);
+
+  // Reset all groups status
+  oneTouchGroups.value.forEach((g) => {
+    g.status = 'idle';
+    g.batches = [];
+  });
+
+  // ========== PDF MODE: Generate a single PDF per group & share directly ==========
+  if (oneTouchShareMode.value === 'pdf') {
+    for (const group of checkedGroups) {
+      if (cancelOneTouch.value) break;
+      group.status = 'preparing';
+      group.isExpanded = true;
+      oneTouchProgress.value = `📄 ${group.label}...`;
+
+      try {
+        const effectiveMinQty = oneTouchMinQtyEnabled.value ? group.minQty : 0;
+        const effectiveMaxQty = oneTouchMinQtyEnabled.value ? parseMaxQty(group.maxQty) : Infinity;
+
+        const { blob, pageCount } = await generateOneTouchPdfBlob(
+          group.activeBrands,
+          oneTouchOnlyWithPhotos.value,
+          effectiveMinQty,
+          effectiveMaxQty,
+          group.label,
+          group.isKids
+        );
+
+        if (!blob || pageCount === 0) {
+          group.status = 'ready';
+          continue;
+        }
+
+        // Save and share as a single PDF file
+        const today = new Date().toISOString().split('T')[0];
+        const pdfFileName = `SBE_${group.label.replace(/[^a-zA-Z0-9]/g, '_')}_${today}.pdf`;
+
+        if (isNativeApp.value) {
+          // Convert blob to base64 for Capacitor
+          const reader = new FileReader();
+          const base64Promise = new Promise((resolve) => {
+            reader.onloadend = () => {
+              const base64 = reader.result.split(',')[1];
+              resolve(base64);
+            };
+            reader.readAsDataURL(blob);
+          });
+          const pdfBase64 = await base64Promise;
+
+          const savedPdf = await Filesystem.writeFile({
+            path: pdfFileName,
+            data: pdfBase64,
+            directory: Directory.Cache,
+          });
+
+          // Set up as a single "batch" for UI consistency
+          group.batches = [{ id: 0, status: 'ready', fileUris: [savedPdf.uri] }];
+
+          // Auto-share to WhatsApp
+          try {
+            await Share.share({ files: [savedPdf.uri] });
+          } catch (shareErr) {
+            console.log('PDF share cancelled or failed:', shareErr);
+          }
+        } else {
+          // Web fallback: download the PDF
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = pdfFileName;
+          a.click();
+          URL.revokeObjectURL(url);
+          group.batches = [{ id: 0, status: 'ready', fileUris: [pdfFileName] }];
+        }
+
+        group.status = cancelOneTouch.value ? 'idle' : 'ready';
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (err) {
+        console.error(`One Touch PDF failed for ${group.label}:`, err);
+        group.status = 'idle';
+      }
+    }
+
+    if (oneTouchTimerInterval) clearInterval(oneTouchTimerInterval);
+    isOneTouchPreparing.value = false;
+    isGenerating.value = false;
+    oneTouchProgress.value = '';
+    showToast.value = true;
+    toastMessage.value = cancelOneTouch.value
+      ? 'One Touch Preparation Cancelled'
+      : 'PDF Sharing complete!';
+    setTimeout(() => (showToast.value = false), 4000);
+    return;
+  }
+
+  // ========== IMAGE MODE: Direct HTML5 Canvas Rendering (Ultra Fast & Lightweight) ==========
+  await ensureClashFont();
+
+  for (const group of checkedGroups) {
+    if (cancelOneTouch.value) break;
+    group.status = 'preparing';
+    group.isExpanded = true;
+
+    try {
+      const effectiveMinQty = oneTouchMinQtyEnabled.value ? group.minQty : 0;
+      const effectiveMaxQty = oneTouchMinQtyEnabled.value ? parseMaxQty(group.maxQty) : Infinity;
+
+      // Filter products for this group
+      const data = stockData.value;
+      const targetProducts = [];
+
+      if (group.isKids) {
+        for (const fg of data) {
+          if (fg.groupName === '_META_DATA_' || !fg.products) continue;
+          for (const product of fg.products) {
+            if (!isKidsProduct(product.productName, fg.groupName)) continue;
+            const hasImg = product.imageUrl || product.secondaryImageUrl;
+            if (oneTouchOnlyWithPhotos.value && !hasImg) continue;
+            if (product.quantity < effectiveMinQty) continue;
+            if (effectiveMaxQty > 0 && product.quantity > effectiveMaxQty) continue;
+            targetProducts.push({ product, group: fg });
+          }
+        }
+      } else if (group.isNewArrival) {
+        const thresholdDate = new Date();
+        thresholdDate.setDate(thresholdDate.getDate() - (group.newArrivalDays || 60));
+        for (const fg of data) {
+          if (fg.groupName === '_META_DATA_' || !fg.products) continue;
+          for (const product of fg.products) {
+            const hasImg = product.imageUrl || product.secondaryImageUrl;
+            if (oneTouchOnlyWithPhotos.value && !hasImg) continue;
+            if (product.quantity < effectiveMinQty) continue;
+            if (effectiveMaxQty > 0 && product.quantity > effectiveMaxQty) continue;
+            if (!product.firstSeenAt) continue;
+            
+            const itemDate = new Date(product.firstSeenAt);
+            if (itemDate >= thresholdDate) {
+              targetProducts.push({ product, group: fg });
+            }
+          }
+        }
+      } else {
+        const filteredGroups = data.filter((g) => {
+          return group.activeBrands.some((tb) => tb.toLowerCase() === g.groupName.toLowerCase());
+        });
+
+        for (const fg of filteredGroups) {
+          for (const product of fg.products) {
+            const hasImg = product.imageUrl || product.secondaryImageUrl;
+            if (oneTouchOnlyWithPhotos.value && !hasImg) continue;
+            if (product.quantity < effectiveMinQty) continue;
+            if (effectiveMaxQty > 0 && product.quantity > effectiveMaxQty) continue;
+            targetProducts.push({ product, group: fg });
+          }
+        }
+      }
+
+      // Apply global sort option
+      if (oneTouchSortMode.value === 'qtyDesc') {
+        targetProducts.sort((a, b) => b.product.quantity - a.product.quantity);
+      } else if (oneTouchSortMode.value === 'newest') {
+        targetProducts.sort((a, b) => {
+          const dateA = a.product.firstSeenAt ? new Date(a.product.firstSeenAt).getTime() : 0;
+          const dateB = b.product.firstSeenAt ? new Date(b.product.firstSeenAt).getTime() : 0;
+          return dateB - dateA;
+        });
+      }
+
+      if (targetProducts.length === 0) {
+        group.status = 'ready';
+        continue;
+      }
+
+      // Add 1 to account for the dynamic summary cover image in Batch 0
+      const totalBatches = Math.ceil((targetProducts.length + 1) / 99);
+      for (let i = 0; i < totalBatches; i++) {
+        group.batches.push({ id: i, status: 'pending', fileUris: [] });
+      }
+
+      const cacheKey = `${group.label}_vdirectcanvas_${oneTouchOnlyWithPhotos.value}_${effectiveMinQty}_${effectiveMaxQty}_${group.activeBrands.sort().join(',')}`;
+      let fileUris = [];
+
+      if (oneTouchCache.value[cacheKey]) {
+        fileUris = oneTouchCache.value[cacheKey];
+        await new Promise((r) => setTimeout(r, 200));
+
+        // Distribute to batches (Max 99 per batch)
+        const chunkSize = 99;
+        let bIdx = 0;
+        for (let i = 0; i < fileUris.length; i += chunkSize) {
+          if (group.batches[bIdx]) {
+            group.batches[bIdx].fileUris = fileUris.slice(i, i + chunkSize);
+            group.batches[bIdx].status = 'ready';
+          }
+          bIdx++;
+        }
+        group.status = 'ready';
+      } else {
+        if (group.batches.length > 0) {
+          group.batches[0].status = 'preparing';
+        }
+
+        // 1. Generate the Dynamic Summary Cover for this One Touch group (Prepend to Batch 0)
+        let summaryFileUri = null;
+        try {
+          const summaryImg = await generateBrandSummaryImage({
+            groupLabel: group.label,
+            subBrands: group.activeBrands,
+            products: targetProducts.map((t) => t.product),
+          });
+
+          const summaryFileName = `ot_${group.label.replace(/[^a-zA-Z0-9]/g, '')}_000_summary.jpg`;
+          if (isNativeApp.value) {
+            const savedSummary = await Filesystem.writeFile({
+              path: summaryFileName,
+              data: summaryImg.base64,
+              directory: Directory.Cache,
+            });
+            summaryFileUri = savedSummary.uri;
+          } else {
+            summaryFileUri = `data:image/jpeg;base64,${summaryImg.base64}`;
+          }
+        } catch (sumErr) {
+          console.error(`Dynamic summary cover failed for ${group.label}:`, sumErr);
+        }
+
+        let currentBatchIndex = 0;
+        let currentBatchUris = [];
+
+        // Prepend dynamic summary cover to the very first batch (item 0 of Batch 0)
+        if (summaryFileUri) {
+          currentBatchUris.push(summaryFileUri);
+          fileUris.push(summaryFileUri);
+        }
+
+        const dateStr = new Date().toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }).toUpperCase();
+
+        let generatedImageCount = 0;
+        for (let i = 0; i < targetProducts.length; i++) {
+          if (cancelOneTouch.value) break;
+
+          const { product, group: prodGroup } = targetProducts[i];
+          oneTouchProgress.value = `📸 ${group.label} (${i + 1}/${targetProducts.length})...`;
+
+          // Yield to event loop periodically for buttery-smooth UI
+          if (i % 5 === 0) {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+
+          // 2. Load Image Element with fast failover & timeout
+          const imgElement = await loadProductImageElement(product);
+
+          // If user selected "Only with photos" and this photo is missing or failed to load, skip it!
+          if (oneTouchOnlyWithPhotos.value && !imgElement) {
+            continue;
+          }
+
+          // 3. Render directly onto HTML5 Canvas
+          const b64 = renderProductShareImageDirect(product, prodGroup, dateStr, imgElement);
+          if (!b64) continue;
+
+          generatedImageCount++;
+          const fileName = `ot_${group.label.replace(/[^a-zA-Z0-9]/g, '')}_${generatedImageCount}.jpg`;
+
+          if (isNativeApp.value) {
+            const saved = await Filesystem.writeFile({
+              path: fileName,
+              data: b64,
+              directory: Directory.Cache,
+            });
+            currentBatchUris.push(saved.uri);
+            fileUris.push(saved.uri);
+          } else {
+            const a = document.createElement('a');
+            a.href = `data:image/jpeg;base64,${b64}`;
+            a.download = fileName;
+            a.click();
+            await new Promise((r) => setTimeout(r, 60)); // Rate limit downloads on Web
+            currentBatchUris.push(fileName);
+            fileUris.push(fileName);
+          }
+
+          // If we hit 99 in current batch
+          if (currentBatchUris.length === 99) {
+            if (group.batches[currentBatchIndex]) {
+              group.batches[currentBatchIndex].fileUris = [...currentBatchUris];
+              group.batches[currentBatchIndex].status = 'ready';
+            }
+            currentBatchUris = [];
+            currentBatchIndex++;
+            if (currentBatchIndex < group.batches.length) {
+              group.batches[currentBatchIndex].status = 'preparing';
+            }
+          }
+        }
+
+        // Flush remaining images in final batch
+        if (currentBatchUris.length > 0 && group.batches[currentBatchIndex]) {
+          group.batches[currentBatchIndex].fileUris = [...currentBatchUris];
+          group.batches[currentBatchIndex].status = 'ready';
+        }
+
+        // Clean up any empty extra batches if products were skipped
+        group.batches = group.batches.filter((b) => b.fileUris && b.fileUris.length > 0);
+
+        if (!cancelOneTouch.value && isNativeApp.value && fileUris.length > 0) {
+          oneTouchCache.value[cacheKey] = fileUris;
+        }
+        group.status = cancelOneTouch.value ? 'idle' : 'ready';
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+    } catch (err) {
+      console.error(`One Touch failed for ${group.label}:`, err);
+      group.status = 'idle';
+    }
+  }
+
+  if (oneTouchTimerInterval) clearInterval(oneTouchTimerInterval);
+
+  isOneTouchPreparing.value = false;
+  isGenerating.value = false;
+  showToast.value = true;
+  toastMessage.value = cancelOneTouch.value
+    ? 'One Touch Preparation Cancelled'
+    : 'One Touch Preparation complete!';
+  setTimeout(() => (showToast.value = false), 4000);
+};
+
+const shareBatchDirectly = async (batch) => {
+  if (batch.status !== 'ready') return;
+  try {
+    await Share.share({ files: batch.fileUris });
+  } catch (e) {
+    console.error('Share failed or cancelled', e);
+  }
+};
+</script>
+
+<style scoped>
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: #94a3b8;
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(20px);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.animate-bounce-in {
+  animation: bounceIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+</style>

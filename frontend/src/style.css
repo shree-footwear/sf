@@ -1,0 +1,215 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #020617;
+  --gold-primary: #c59b27;
+  --gold-light: #dfba73;
+  --gold-dark: #9e782f;
+  --gold-gradient: linear-gradient(135deg, #dfba73 0%, #c59b27 50%, #9e782f 100%);
+  --dark-surface: #121214;
+  --dark-elevated: #1a1a1e;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+  overscroll-behavior-x: none;
+  -webkit-overflow-scrolling: touch;
+  @apply bg-[#fcfbf9] text-slate-800 antialiased font-sans selection:bg-[#c59b27] selection:text-white;
+}
+
+/* Root app container */
+#app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   ANDROID & PWA SAFE AREA UTILITIES
+   ============================================ */
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-top-fixed {
+  top: 0;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Main content offset for non-landing catalog view */
+.platform-android .main-content-offset {
+  margin-top: calc(54px + env(safe-area-inset-top, 0px));
+}
+@media (min-width: 768px) {
+  .platform-android .main-content-offset {
+    margin-top: calc(72px + env(safe-area-inset-top, 0px));
+  }
+}
+
+body:not(.platform-android) .main-content-offset {
+  margin-top: 54px;
+}
+@media (min-width: 768px) {
+  body:not(.platform-android) .main-content-offset {
+    margin-top: 72px;
+  }
+}
+
+/* Sticky Group Header Offset */
+.sticky-group-header {
+  top: calc(54px + env(safe-area-inset-top, 20px));
+}
+@media (min-width: 768px) {
+  .sticky-group-header {
+    top: 72px;
+  }
+}
+
+/* Android-only elements */
+.android-only-btn {
+  display: none !important;
+}
+.platform-android .android-only-btn {
+  display: flex !important;
+}
+
+/* ============================================
+   SCROLLBAR & UTILITY HELPERS
+   ============================================ */
+
+.no-scrollbar::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html {
+  scrollbar-width: none;
+}
+
+/* ============================================
+   LUXURY GOLD & BRAND THEME EFFECTS
+   ============================================ */
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #dfba73 0%, #c59b27 50%, #9e782f 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #dfba73 0%, #c59b27 50%, #9e782f 100%);
+}
+
+.gold-border {
+  border-color: rgba(197, 155, 39, 0.3);
+}
+
+.gold-glow {
+  box-shadow: 0 4px 20px -2px rgba(197, 155, 39, 0.25);
+}
+
+.holographic-text {
+  background: linear-gradient(135deg, #18181b 0%, #c59b27 50%, #18181b 100%);
+  background-size: 200% auto;
+  color: #18181b;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 4s linear infinite;
+}
+
+@keyframes shine {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+.holographic-border {
+  position: relative;
+  z-index: 0;
+}
+
+.holographic-border::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #dfba73, #c59b27, #18181b, #dfba73);
+  background-size: 300% auto;
+  z-index: -1;
+  animation: shine 4s linear infinite;
+}
+
+/* Transitions */
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.list-leave-active {
+  position: absolute;
+}
+
+@media (max-width: 640px) {
+  table {
+    @apply table-fixed;
+  }
+  th, td {
+    @apply px-1 py-2 text-xs;
+  }
+  th:first-child, td:first-child { @apply w-28; }
+  th:nth-child(2), td:nth-child(2) { @apply w-16; }
+  th:nth-child(3), td:nth-child(3) { @apply w-28; }
+  .image-box { @apply w-20 h-28; }
+}
+
+/* Marquee Utilities */
+.animate-marquee-left {
+  animation: marquee-left 35s linear infinite;
+}
+.animate-marquee-right {
+  animation: marquee-right 35s linear infinite;
+}
+@keyframes marquee-left {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-right {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+.pause-marquee:hover,
+.pause-marquee:active,
+.pause-marquee:focus-within {
+  animation-play-state: paused;
+}
