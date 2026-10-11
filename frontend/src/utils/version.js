@@ -1,7 +1,7 @@
 export const APP_VERSION = {
-  hubCode: 'sbe-hub_033',
-  sbeCode: 'sbe_033',
-  code: 'sbe-hub_033', // Backwards-compatible
+  hubCode: 'sf-hub_033',
+  sbeCode: 'sf_033',
+  code: 'sf-hub_033', // Backwards-compatible
   version: '1.6.0',
   updatedAt: '07 Sep 2026, 02:30 PM',
   commitTitle: 'fix(sync): extend sync timeout from 15s to 3m and backend Tally timeout to 2m to prevent premature connection timeouts',
@@ -10,7 +10,7 @@ export const APP_VERSION = {
     sha: '8919400',
     date: '07 Sep 2026, 01:57 PM',
     author: 'Sahil kumar',
-    url: 'https://github.com/sahilsync07/sbe/commit/8919400a17a13d1f053d62876e9c75731b3dcd33'
+    url: 'https://github.com/shree-footwear/sf/commit/8919400a17a13d1f053d62876e9c75731b3dcd33'
   },
   changes: [
     {

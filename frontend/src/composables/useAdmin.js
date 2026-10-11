@@ -50,7 +50,7 @@ const removeStoredRole = async () => {
 };
 
 // Encrypted sync token blob (XOR encrypted with sahil123)
-const ENCRYPTED_SYNC_TOKEN = '14091836265b63050617212021757458355912223b05560435531c000a49057b3d505a081f624204';
+const ENCRYPTED_SYNC_TOKEN = '14091836386546660900110018497e431c0c1a33297b0261040b10002578015647315b332108037c';
 
 export const unlockSyncToken = async (key) => {
     try {

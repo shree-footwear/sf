@@ -43,7 +43,7 @@
             </div>
             <p class="text-xs mt-2 text-slate-600 font-medium leading-relaxed">
               {{ isConfigured 
-                ? 'Device is authorized to commit photo uploads directly to sahilsync07/sbe.' 
+                ? 'Device is authorized to commit photo uploads directly to shree-footwear/sf.' 
                 : 'This device needs a sync key to commit photos to GitHub without a PC server.' 
               }}
             </p>
@@ -219,7 +219,7 @@ const handleActivate = async () => {
 const handleCheckPending = async () => {
   isChecking.value = true;
   try {
-    const REMOTE_DATA_URL = 'https://raw.githubusercontent.com/sahilsync07/sbe/refs/heads/main/frontend/public/assets/stock-data.json';
+    const REMOTE_DATA_URL = 'https://raw.githubusercontent.com/shree-footwear/sf/refs/heads/main/frontend/public/assets/stock-data.json';
     const res = await fetch(`${REMOTE_DATA_URL}?_t=${Date.now()}`);
     if (res.ok) {
       const remote = await res.json();

@@ -8,14 +8,14 @@
       :class="isHubOpen 
         ? 'bg-violet-600 text-white border-violet-700 shadow-md ring-2 ring-violet-400/30' 
         : 'bg-white/90 backdrop-blur-md text-violet-700 border-violet-200/80 hover:bg-violet-50 hover:border-violet-300'"
-      title="Tap to view SBE Hub build details"
+      title="Tap to view SF Hub build details"
     >
       <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
       <span>{{ currentVersion.hubCode || currentVersion.code }}</span>
       <i class="fa-solid fa-circle-info text-[10px] opacity-70"></i>
     </button>
 
-    <!-- 2. SBE Core Version Tag Pill (sbe_xxx) showing recent commit update -->
+    <!-- 2. SF Core Version Tag Pill (sf_xxx) showing recent commit update -->
     <button
       type="button"
       @click.stop="toggleSbe"
@@ -23,14 +23,14 @@
       :class="isSbeOpen 
         ? 'bg-emerald-600 text-white border-emerald-700 shadow-md ring-2 ring-emerald-400/30' 
         : 'bg-white/90 backdrop-blur-md text-emerald-700 border-emerald-200/80 hover:bg-emerald-50 hover:border-emerald-300'"
-      :title="`Recent SBE Update: ${recentCommit.message}`"
+      :title="`Recent SF Update: ${recentCommit.message}`"
     >
       <i class="fa-solid fa-code-commit text-[10px] text-emerald-500" :class="{ 'text-white': isSbeOpen }"></i>
-      <span>{{ currentVersion.sbeCode || 'sbe_033' }}</span>
+      <span>{{ currentVersion.sbeCode || 'sf_033' }}</span>
       <span v-if="isLiveCommit" class="w-1 h-1 rounded-full bg-emerald-500" title="Live GitHub"></span>
     </button>
 
-    <!-- Info Bubble Popover 1: SBE Hub Release Timeline -->
+    <!-- Info Bubble Popover 1: SF Hub Release Timeline -->
     <Transition name="fade-pop">
       <div
         v-if="isHubOpen"
@@ -42,7 +42,7 @@
             <span class="px-2 py-0.5 rounded-lg bg-violet-100 text-violet-800 text-[10px] font-black uppercase">
               {{ currentVersion.hubCode || currentVersion.code }}
             </span>
-            <span class="text-xs font-black text-slate-900">SBE Hub Release</span>
+            <span class="text-xs font-black text-slate-900">SF Hub Release</span>
           </div>
           <button
             type="button"
@@ -86,12 +86,12 @@
 
         <!-- Footer -->
         <div class="text-[10px] text-slate-400 font-medium text-center pt-1 border-t border-slate-100">
-          Sri Brundabana Enterprises • SBE Hub
+          Shree Footwear • SF Hub
         </div>
       </div>
     </Transition>
 
-    <!-- Info Bubble Popover 2: Recent SBE Commit Update -->
+    <!-- Info Bubble Popover 2: Recent SF Commit Update -->
     <Transition name="fade-pop">
       <div
         v-if="isSbeOpen"
@@ -101,9 +101,9 @@
         <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
           <div class="flex items-center gap-2">
             <span class="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">
-              {{ currentVersion.sbeCode || 'sbe_033' }}
+              {{ currentVersion.sbeCode || 'sf_033' }}
             </span>
-            <span class="text-xs font-black text-slate-900">Recent SBE Commit</span>
+            <span class="text-xs font-black text-slate-900">Recent SF Commit</span>
           </div>
           <div class="flex items-center gap-1.5">
             <button
@@ -165,7 +165,7 @@
             {{ isLiveCommit ? 'Synced with GitHub main' : 'Snapshot from build' }}
           </span>
           <a
-            href="https://github.com/sahilsync07/sbe/commits/main"
+            href="https://github.com/shree-footwear/sf/commits/main"
             target="_blank"
             rel="noopener noreferrer"
             class="text-violet-600 hover:text-violet-800 font-semibold hover:underline"
@@ -176,7 +176,7 @@
 
         <!-- Footer -->
         <div class="text-[10px] text-slate-400 font-medium text-center pt-1 border-t border-slate-100">
-          Sri Brundabana Enterprises • Rayagada
+          Shree Footwear • Srikakulam
         </div>
       </div>
     </Transition>
@@ -199,7 +199,7 @@ const recentCommit = ref(currentVersion.recentCommit || {
   sha: '8919400',
   date: currentVersion.updatedAt,
   author: 'Sahil kumar',
-  url: 'https://github.com/sahilsync07/sbe'
+  url: 'https://github.com/shree-footwear/sf'
 });
 
 const toggleHub = () => {
@@ -220,7 +220,7 @@ const toggleSbe = () => {
 const fetchLatestCommit = async () => {
   isFetchingCommit.value = true;
   try {
-    const res = await fetch('https://api.github.com/repos/sahilsync07/sbe/commits?per_page=1');
+    const res = await fetch('https://api.github.com/repos/shree-footwear/sf/commits?per_page=1');
     if (res.ok) {
       const data = await res.json();
       if (data && data[0] && data[0].commit) {

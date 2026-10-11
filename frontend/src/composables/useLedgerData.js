@@ -8,7 +8,7 @@ const error = ref(null);
 const lastLedgerSync = ref(null);
 
 const LEDGER_CACHE_KEY = 'sbe_ledger_data_cache';
-const REMOTE_LEDGER_URL = 'https://raw.githubusercontent.com/sahilsync07/sbe/refs/heads/main/frontend/public/assets/ledger-data.json';
+const REMOTE_LEDGER_URL = 'https://raw.githubusercontent.com/shree-footwear/sf/refs/heads/main/frontend/public/assets/ledger-data.json';
 
 export function useLedgerData() {
   const loadLedgerData = async (forceRefresh = false) => {

@@ -38,9 +38,9 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       manifest: {
-        name: 'e-SBE Wholesale Footwear',
-        short_name: 'e-SBE',
-        description: 'e-SBE Footwear Wholesale Catalog Application',
+        name: 'e-SF | Shree Footwear Wholesale',
+        short_name: 'e-SF',
+        description: 'e-SF Shree Footwear Wholesale Catalog Application',
         theme_color: '#ffffff',
         icons: [
           {
@@ -57,5 +57,5 @@ export default defineConfig(({ mode }) => ({
       }
     })
   ],
-  base: mode === 'android' ? "./" : "/sbe/", // '/sbe/' for GH Pages, './' for Android
+  base: mode === 'android' ? "./" : "/sf/", // '/sf/' for GH Pages, './' for Android
 }));

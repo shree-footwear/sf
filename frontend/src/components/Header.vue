@@ -27,7 +27,6 @@
               :src="`${baseUrl}assets/logo.png`" 
               alt="SF Logo" 
               class="h-7 sm:h-8 w-auto max-w-[130px] object-contain drop-shadow-xs" 
-              @error="$event.target.src = `${baseUrl}assets/logos/e-sbe-new-logo.png`"
             />
           </div>
           <span v-if="lastSyncFormatted" class="text-[10px] text-slate-500 font-bold tracking-tight mt-0.5 whitespace-nowrap">

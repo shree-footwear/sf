@@ -1,4 +1,4 @@
-import { useGitHubTokenModal, DEFAULT_GITHUB_TOKEN } from '@/composables/useGitHubTokenModal';
+import { useGitHubTokenModal, DEFAULT_GITHUB_TOKEN, getDefaultGitHubToken } from '@/composables/useGitHubTokenModal';
 import axios from 'axios';
 
 export function utf8ToBase64(str) {
@@ -17,6 +17,7 @@ export const getGitHubToken = () => {
     localStorage.getItem('sf_github_token') ||
     localStorage.getItem('sbe_github_token') ||
     import.meta.env.VITE_GITHUB_TOKEN ||
+    getDefaultGitHubToken() ||
     DEFAULT_GITHUB_TOKEN ||
     ''
   );

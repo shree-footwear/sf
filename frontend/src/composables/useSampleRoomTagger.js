@@ -124,7 +124,7 @@ export function useSampleRoomTagger() {
       // 1. Fetch freshest catalog
       let fullCatalog = null;
       try {
-        const REMOTE_URL = 'https://raw.githubusercontent.com/sahilsync07/sbe/refs/heads/main/frontend/public/assets/stock-data.json';
+        const REMOTE_URL = 'https://raw.githubusercontent.com/shree-footwear/sf/refs/heads/main/frontend/public/assets/stock-data.json';
         const res = await fetch(`${REMOTE_URL}?_t=${Date.now()}`);
         if (res.ok) fullCatalog = await res.json();
       } catch (e) {

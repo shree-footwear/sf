@@ -681,7 +681,7 @@ export default {
 
     async loadBrands() {
       try {
-        const res = await axios.get("https://raw.githubusercontent.com/sahilsync07/sbe/main/frontend/public/assets/stock-data.json");
+        const res = await axios.get("https://raw.githubusercontent.com/shree-footwear/sf/main/frontend/public/assets/stock-data.json");
         this.brands = [...new Set(res.data.map(g => g.groupName))].sort();
       } catch (err) {
         this.showToast = true;

@@ -123,7 +123,7 @@
 
 <script setup>
 import { ref, watch, nextTick } from 'vue';
-import { useGitHubTokenModal, DEFAULT_GITHUB_TOKEN } from '../../composables/useGitHubTokenModal';
+import { useGitHubTokenModal, DEFAULT_GITHUB_TOKEN, getDefaultGitHubToken } from '../../composables/useGitHubTokenModal';
 
 const { isTokenModalOpen, tokenModalReason, handleSaveToken, handleCloseTokenModal } = useGitHubTokenModal();
 
@@ -144,7 +144,7 @@ watch(isTokenModalOpen, (isOpen) => {
 });
 
 const useDefaultToken = () => {
-  tokenValue.value = DEFAULT_GITHUB_TOKEN;
+  tokenValue.value = getDefaultGitHubToken() || DEFAULT_GITHUB_TOKEN;
   showToken.value = true;
 };
 

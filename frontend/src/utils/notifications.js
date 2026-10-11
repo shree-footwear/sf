@@ -220,7 +220,7 @@ export async function checkAndNotifyNewArrivals(catalog, router = null) {
 }
 
 const STORAGE_KEY_SEEN_BROADCASTS = 'sbe_seen_broadcast_notifications';
-const REMOTE_NOTIFICATIONS_URL = 'https://raw.githubusercontent.com/sahilsync07/sbe/refs/heads/main/frontend/public/assets/notifications.json';
+const REMOTE_NOTIFICATIONS_URL = 'https://raw.githubusercontent.com/shree-footwear/sf/refs/heads/main/frontend/public/assets/notifications.json';
 
 /**
  * Checks for unseen admin broadcast notifications from notifications.json
@@ -232,7 +232,7 @@ export async function checkAndNotifyBroadcasts(router = null) {
     try {
         let broadcasts = [];
         try {
-            const baseUrl = typeof window !== 'undefined' ? (window.location.origin + (window.location.pathname.startsWith('/sbe') ? '/sbe/' : '/')) : '/';
+            const baseUrl = typeof window !== 'undefined' ? (window.location.origin + (window.location.pathname.startsWith('/sf') ? '/sf/' : '/')) : '/';
             const res = await fetch(`${baseUrl}assets/notifications.json?t=${Date.now()}`);
             if (res.ok) {
                 broadcasts = await res.json();

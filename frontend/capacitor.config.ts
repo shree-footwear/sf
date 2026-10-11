@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'SF Srikakulam',
   webDir: 'dist',
   server: {
-    url: 'https://sahilsync07.github.io/sf/',
+    url: 'https://shree-footwear.github.io/sf/',
     cleartext: false
   }
 };

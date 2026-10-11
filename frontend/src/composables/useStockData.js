@@ -4,9 +4,7 @@ import { toast } from 'vue3-toastify';
 import { Capacitor } from '@capacitor/core';
 import { useAppStore } from '../stores/appStore';
 import { storeToRefs } from 'pinia';
-import { extractColor } from '../utils/colors.js';
-import { useGitHubTokenModal, DEFAULT_GITHUB_TOKEN } from './useGitHubTokenModal';
-import { markCloudFailed } from '../utils/cloudStatus.js';
+import { useGitHubTokenModal, DEFAULT_GITHUB_TOKEN, getDefaultGitHubToken } from './useGitHubTokenModal';
 import {
     saveStagedBase64,
     getStagedBase64,
@@ -17,7 +15,7 @@ import {
 import { checkAndNotifyNewArrivals } from '../utils/notifications.js';
 
 const SYNC_KEY = 'sbe_last_sync_timestamp';
-const REMOTE_DATA_URL = 'https://raw.githubusercontent.com/sahilsync07/sbe/refs/heads/main/frontend/public/assets/stock-data.json';
+const REMOTE_DATA_URL = 'https://raw.githubusercontent.com/shree-footwear/sf/refs/heads/main/frontend/public/assets/stock-data.json';
 
 /**
  * Fast stream reader that extracts lastSync from the _META_DATA_ header of stock-data.json
@@ -184,6 +182,7 @@ function enqueueSync(taskFn) {
 const getGitHubToken = () => {
     return localStorage.getItem('sbe_github_token') || 
            import.meta.env.VITE_GITHUB_TOKEN || 
+           getDefaultGitHubToken() || 
            DEFAULT_GITHUB_TOKEN || 
            '';
 };
@@ -193,8 +192,8 @@ const getGitHubToken = () => {
  */
 async function commitFileToGitHub(filePath, updatedContentString, commitMessage, tokenOverride = null) {
     const token = tokenOverride || getGitHubToken();
-    const owner = import.meta.env.VITE_GITHUB_OWNER || 'sahilsync07';
-    const repo = import.meta.env.VITE_GITHUB_REPO || 'sbe';
+    const owner = import.meta.env.VITE_GITHUB_OWNER || 'shree-footwear';
+    const repo = import.meta.env.VITE_GITHUB_REPO || 'sf';
     const branch = import.meta.env.VITE_GITHUB_BRANCH || 'main';
 
     if (!token) {
@@ -808,7 +807,7 @@ export function useStockData(isLocal) {
     };
 
     /**
-     * Push all staged photo binaries to sahilsync07/sbe-photos in ONE single combined Git commit
+     * Push all staged photo binaries to shree-footwear/sf-photos in ONE single combined Git commit
      * using the GitHub Git Database API (Blobs -> Tree -> Commit -> Ref update)
      */
     const batchUploadToGitHubPhotosRepo = async (items, token) => {
@@ -829,7 +828,7 @@ export function useStockData(isLocal) {
 
         // 1. Create Git blobs for each photo in parallel
         const treeEntries = await Promise.all(uploadItems.map(async (item) => {
-            const blobRes = await fetch(`https://api.github.com/repos/sahilsync07/sbe-photos/git/blobs`, {
+            const blobRes = await fetch(`https://api.github.com/repos/shree-footwear/sf-photos/git/blobs`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `token ${token}`,
@@ -860,7 +859,7 @@ export function useStockData(isLocal) {
         }));
 
         // 2. Fetch current main branch commit SHA
-        const refRes = await fetch(`https://api.github.com/repos/sahilsync07/sbe-photos/git/refs/heads/main`, {
+        const refRes = await fetch(`https://api.github.com/repos/shree-footwear/sf-photos/git/refs/heads/main`, {
             headers: {
                 'Authorization': `token ${token}`,
                 'Accept': 'application/vnd.github.v3+json'
@@ -876,7 +875,7 @@ export function useStockData(isLocal) {
         const parentCommitSha = refData.object.sha;
 
         // 3. Fetch parent commit tree SHA
-        const commitRes = await fetch(`https://api.github.com/repos/sahilsync07/sbe-photos/git/commits/${parentCommitSha}`, {
+        const commitRes = await fetch(`https://api.github.com/repos/shree-footwear/sf-photos/git/commits/${parentCommitSha}`, {
             headers: {
                 'Authorization': `token ${token}`,
                 'Accept': 'application/vnd.github.v3+json'
@@ -892,7 +891,7 @@ export function useStockData(isLocal) {
         const baseTreeSha = commitData.tree.sha;
 
         // 4. Create new Git tree with all photo blobs
-        const newTreeRes = await fetch(`https://api.github.com/repos/sahilsync07/sbe-photos/git/trees`, {
+        const newTreeRes = await fetch(`https://api.github.com/repos/shree-footwear/sf-photos/git/trees`, {
             method: 'POST',
             headers: {
                 'Authorization': `token ${token}`,
@@ -913,7 +912,7 @@ export function useStockData(isLocal) {
         const newTreeData = await newTreeRes.json();
 
         // 5. Create ONE single Git commit
-        const newCommitRes = await fetch(`https://api.github.com/repos/sahilsync07/sbe-photos/git/commits`, {
+        const newCommitRes = await fetch(`https://api.github.com/repos/shree-footwear/sf-photos/git/commits`, {
             method: 'POST',
             headers: {
                 'Authorization': `token ${token}`,
@@ -935,7 +934,7 @@ export function useStockData(isLocal) {
         const newCommitData = await newCommitRes.json();
 
         // 6. Update main branch ref
-        const updateRefRes = await fetch(`https://api.github.com/repos/sahilsync07/sbe-photos/git/refs/heads/main`, {
+        const updateRefRes = await fetch(`https://api.github.com/repos/shree-footwear/sf-photos/git/refs/heads/main`, {
             method: 'PATCH',
             headers: {
                 'Authorization': `token ${token}`,
@@ -958,7 +957,7 @@ export function useStockData(isLocal) {
 
         const cdnMap = new Map();
         treeEntries.forEach(entry => {
-            cdnMap.set(entry.publicId, `https://cdn.jsdelivr.net/gh/sahilsync07/sbe-photos@main/${entry.path}`);
+            cdnMap.set(entry.publicId, `https://cdn.jsdelivr.net/gh/shree-footwear/sf-photos@main/${entry.path}`);
         });
 
         return {
@@ -1369,7 +1368,7 @@ export function useStockData(isLocal) {
                 }
             }
 
-            // 1. Collect staged photo binaries for sahilsync07/sbe-photos CDN batch commit
+            // 1. Collect staged photo binaries for shree-footwear/sf-photos CDN batch commit
             const stagedPhotosToUpload = [];
             for (const item of pendingUploads.value) {
                 if (item.imageUrl) {
@@ -1391,7 +1390,7 @@ export function useStockData(isLocal) {
                 }
             }
 
-            // 2. Batch commit photos to sahilsync07/sbe-photos repository in ONE single commit
+            // 2. Batch commit photos to shree-footwear/sf-photos repository in ONE single commit
             let cdnMap = new Map();
             if (stagedPhotosToUpload.length > 0) {
                 try {

@@ -229,13 +229,13 @@ const fetchStockData = async () => {
   loading.value = true;
   try {
     // Try fetching from GitHub raw (live data)
-    const res = await fetch('https://raw.githubusercontent.com/sahilsync07/sbe/refs/heads/main/frontend/public/assets/stock-data.json');
+    const res = await fetch('https://raw.githubusercontent.com/shree-footwear/sf/refs/heads/main/frontend/public/assets/stock-data.json');
     const data = await res.json();
     processData(data);
   } catch (err) {
     try {
       // Fallback to local
-      const base = import.meta.env.BASE_URL || '/sbe/';
+      const base = import.meta.env.BASE_URL || '/sf/';
       const res = await fetch(`${base}assets/stock-data.json`);
       const data = await res.json();
       processData(data);

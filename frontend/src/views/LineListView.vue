@@ -132,7 +132,7 @@ onMounted(async () => {
       data = await res.json();
     } catch (localErr) {
       console.warn('Local ledger-data fetch failed, falling back to raw github:', localErr);
-      const res = await fetch('https://raw.githubusercontent.com/sahilsync07/sbe/refs/heads/main/frontend/public/assets/ledger-data.json');
+      const res = await fetch('https://raw.githubusercontent.com/shree-footwear/sf/refs/heads/main/frontend/public/assets/ledger-data.json');
       if (!res.ok) throw new Error('Failed to load ledger data from raw GitHub');
       data = await res.json();
     }

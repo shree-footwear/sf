@@ -154,7 +154,7 @@ export function usePartyTagger() {
       // 2. Fetch freshest ledger-data.json
       let fullLedgerCatalog = null;
       try {
-        const REMOTE_URL = 'https://raw.githubusercontent.com/sahilsync07/sbe/refs/heads/main/frontend/public/assets/ledger-data.json';
+        const REMOTE_URL = 'https://raw.githubusercontent.com/shree-footwear/sf/refs/heads/main/frontend/public/assets/ledger-data.json';
         const res = await fetch(`${REMOTE_URL}?_t=${Date.now()}`);
         if (res.ok) {
           fullLedgerCatalog = await res.json();

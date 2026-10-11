@@ -7,17 +7,16 @@
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100/80 px-2.5 sm:px-6 pb-2 transition-all w-full max-w-full overflow-hidden" style="padding-top: max(0.625rem, env(safe-area-inset-top, 0.625rem));">
       <!-- Top Branding & Action Buttons Row -->
       <div class="flex items-center justify-between gap-2 w-full">
-        <!-- Left: e-SBE Brand Logo -->
+        <!-- Left: e-SF Brand Logo -->
         <div 
           class="flex items-center select-none cursor-pointer group py-0.5 shrink-0" 
           @click="selectTab('All')"
-          title="e-SBE • Wholesale Footwear"
+          title="e-SF • Shree Footwear"
         >
           <img 
             :src="`${baseUrl}assets/logo.png`" 
             alt="SF Logo" 
             class="h-8 sm:h-10 w-auto max-w-[140px] sm:max-w-[170px] object-contain group-hover:scale-105 transition-transform duration-200" 
-            @error="$event.target.src = `${baseUrl}assets/logos/e-sbe-new-logo.png`"
           />
         </div>
 
@@ -112,7 +111,7 @@
             v-else
             @click="$router.push('/home')"
             class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-amber-50 border border-amber-300/80 text-amber-700 hover:bg-amber-100 flex items-center justify-center transition-all active:scale-95 shadow-sm shrink-0"
-            title="SBE Hub"
+            title="SF Hub"
           >
             <i class="fa-solid fa-shield-halved text-xs sm:text-sm"></i>
           </button>

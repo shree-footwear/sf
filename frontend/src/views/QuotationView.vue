@@ -302,8 +302,8 @@ const handleItemFocus = (item) => {
 const loadData = async () => {
   statusBarText.value = "SYNCING STOCK DATA...";
   try {
-    const STOCK_URL = 'https://raw.githubusercontent.com/sahilsync07/sbe/refs/heads/main/frontend/public/assets/stock-data.json';
-    const LEDGER_URL = 'https://raw.githubusercontent.com/sahilsync07/sbe/refs/heads/main/frontend/public/assets/ledger-data.json';
+    const STOCK_URL = 'https://raw.githubusercontent.com/shree-footwear/sf/refs/heads/main/frontend/public/assets/stock-data.json';
+    const LEDGER_URL = 'https://raw.githubusercontent.com/shree-footwear/sf/refs/heads/main/frontend/public/assets/ledger-data.json';
     
     const [stockData, ledgerData] = await Promise.all([
       fetch(STOCK_URL).then(r => r.json()),

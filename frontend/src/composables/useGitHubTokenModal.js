@@ -6,7 +6,9 @@ const isNative = Capacitor.isNativePlatform();
 
 // Decrypt default system token at runtime (avoids GitHub push protection token scanning)
 const ENCRYPTED_DEFAULT_TOKEN = '14091836386546660900110018497e431c0c1a33297b0261040b10002578015647315b332108037c';
-export const DEFAULT_GITHUB_TOKEN = (() => {
+
+export function getDefaultGitHubToken() {
+    if (typeof window === 'undefined') return '';
     try {
         const k = 'sahil123';
         return ENCRYPTED_DEFAULT_TOKEN.match(/.{1,2}/g)
@@ -15,7 +17,9 @@ export const DEFAULT_GITHUB_TOKEN = (() => {
     } catch (e) {
         return '';
     }
-})();
+}
+
+export const DEFAULT_GITHUB_TOKEN = '';
 
 // Reactive singleton state
 const isTokenModalOpen = ref(false);
@@ -73,7 +77,8 @@ export function useGitHubTokenModal() {
     return {
         isTokenModalOpen,
         tokenModalReason,
-        DEFAULT_GITHUB_TOKEN,
+        DEFAULT_GITHUB_TOKEN: getDefaultGitHubToken(),
+        getDefaultGitHubToken,
         promptForToken,
         handleSaveToken,
         handleCloseTokenModal
